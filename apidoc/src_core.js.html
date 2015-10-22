@@ -48,6 +48,35 @@
             </ul>
         </li>
     
+        <li class="item" data-name="olcs.AutoRenderLoop">
+            <span class="title">
+                <a href="olcs.AutoRenderLoop.html">olcs.AutoRenderLoop</a>
+                
+            </span>
+            <ul class="members itemMembers">
+            
+            </ul>
+            <ul class="typedefs itemMembers">
+            
+            </ul>
+            <ul class="methods itemMembers">
+            
+            <span class="subtitle">Methods</span>
+            
+                <li data-name="olcs.AutoRenderLoop#restartRenderLoop" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#restartRenderLoop">restartRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.AutoRenderLoop#setDebug" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#setDebug">setDebug</a>
+                </li>
+            
+            </ul>
+            <ul class="fires itemMembers">
+            
+            </ul>
+        </li>
+    
         <li class="item" data-name="olcs.Camera">
             <span class="title">
                 <a href="olcs.Camera.html">olcs.Camera</a>
@@ -246,12 +275,24 @@
             
             <span class="subtitle">Methods</span>
             
+                <li data-name="olcs.OLCesium#enableAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#enableAutoRenderLoop">enableAutoRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#getAutoRenderLoop">getAutoRenderLoop</a>
+                </li>
+            
                 <li data-name="olcs.OLCesium#getCamera" class="unstable">
                     <a href="olcs.OLCesium.html#getCamera">getCamera</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getCesiumScene" class="unstable">
                     <a href="olcs.OLCesium.html#getCesiumScene">getCesiumScene</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getDataSources" class="unstable">
+                    <a href="olcs.OLCesium.html#getDataSources">getDataSources</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getEnabled" class="unstable">
@@ -769,7 +810,7 @@ olcs.core.extentToRectangle = function(extent, projection) {
 /**
  * Creates Cesium.ImageryLayer best corresponding to the given ol.layer.Layer.
  * Only supports raster layers
- * @param {!ol.layer.Layer} olLayer
+ * @param {!ol.layer.Base} olLayer
  * @param {?ol.proj.Projection} viewProj Projection of the view.
  * @return {?Cesium.ImageryLayer} null if not possible (or supported)
  * @api
@@ -824,9 +865,9 @@ olcs.core.tileLayerToImageryLayer = function(olLayer, viewProj) {
 
 
 /**
- * Synchronizes the layer rendering properties (brightness, contrast, hue,
- * opacity, saturation, visible) to the given Cesium ImageryLayer.
- * @param {!ol.layer.Layer} olLayer
+ * Synchronizes the layer rendering properties (opacity, visible)
+ * to the given Cesium ImageryLayer.
+ * @param {!ol.layer.Base} olLayer
  * @param {!Cesium.ImageryLayer} csLayer
  * @api
  */
@@ -838,31 +879,6 @@ olcs.core.updateCesiumLayerProperties = function(olLayer, csLayer) {
   var visible = olLayer.getVisible();
   if (goog.isDef(visible)) {
     csLayer.show = visible;
-  }
-
-  // saturation and contrast are working ok
-  var saturation = olLayer.getSaturation();
-  if (goog.isDef(saturation)) {
-    csLayer.saturation = saturation;
-  }
-  var contrast = olLayer.getContrast();
-  if (goog.isDef(contrast)) {
-    csLayer.contrast = contrast;
-  }
-
-  // Cesium actually operates in YIQ space -> hard to emulate
-  // The following values are only a rough approximations:
-
-  // The hue in Cesium has different meaning than the OL equivalent.
-  // var hue = olLayer.getHue();
-  // if (goog.isDef(hue)) {
-  //   csLayer.hue = hue;
-  // }
-
-  var brightness = olLayer.getBrightness();
-  if (goog.isDef(brightness)) {
-    // rough estimation
-    csLayer.brightness = Math.pow(1 + parseFloat(brightness), 2);
   }
 };
 
@@ -932,14 +948,14 @@ olcs.core.olGeometryCloneTo4326 = function(geometry, projection) {
  */
 olcs.core.convertColorToCesium = function(olColor) {
   olColor = olColor || 'black';
-  if (goog.isArray(olColor)) {
+  if (Array.isArray(olColor)) {
     return new Cesium.Color(
         Cesium.Color.byteToFloat(olColor[0]),
         Cesium.Color.byteToFloat(olColor[1]),
         Cesium.Color.byteToFloat(olColor[2]),
         olColor[3]
     );
-  } else if (goog.isString(olColor)) {
+  } else if (typeof olColor == 'string') {
     return Cesium.Color.fromCssColorString(olColor);
   }
   goog.asserts.fail('impossible');
@@ -953,7 +969,7 @@ olcs.core.convertColorToCesium = function(olColor) {
 
 
         <footer>
-            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 10 2015 12:36:08 GMT+0200 (CEST)
+            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 19:02:37 GMT+0200 (CEST)
         </footer>
     </div>
 </div>

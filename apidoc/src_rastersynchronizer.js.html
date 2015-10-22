@@ -48,6 +48,35 @@
             </ul>
         </li>
     
+        <li class="item" data-name="olcs.AutoRenderLoop">
+            <span class="title">
+                <a href="olcs.AutoRenderLoop.html">olcs.AutoRenderLoop</a>
+                
+            </span>
+            <ul class="members itemMembers">
+            
+            </ul>
+            <ul class="typedefs itemMembers">
+            
+            </ul>
+            <ul class="methods itemMembers">
+            
+            <span class="subtitle">Methods</span>
+            
+                <li data-name="olcs.AutoRenderLoop#restartRenderLoop" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#restartRenderLoop">restartRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.AutoRenderLoop#setDebug" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#setDebug">setDebug</a>
+                </li>
+            
+            </ul>
+            <ul class="fires itemMembers">
+            
+            </ul>
+        </li>
+    
         <li class="item" data-name="olcs.Camera">
             <span class="title">
                 <a href="olcs.Camera.html">olcs.Camera</a>
@@ -246,12 +275,24 @@
             
             <span class="subtitle">Methods</span>
             
+                <li data-name="olcs.OLCesium#enableAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#enableAutoRenderLoop">enableAutoRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#getAutoRenderLoop">getAutoRenderLoop</a>
+                </li>
+            
                 <li data-name="olcs.OLCesium#getCamera" class="unstable">
                     <a href="olcs.OLCesium.html#getCamera">getCamera</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getCesiumScene" class="unstable">
                     <a href="olcs.OLCesium.html#getCesiumScene">getCesiumScene</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getDataSources" class="unstable">
+                    <a href="olcs.OLCesium.html#getDataSources">getDataSources</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getEnabled" class="unstable">
@@ -491,57 +532,68 @@ olcs.RasterSynchronizer.prototype.removeAllCesiumObjects = function(destroy) {
 
 
 /**
- * Creates a Cesium.ImageryLayer.
+ * Creates an array of Cesium.ImageryLayer.
  * May be overriden by child classes to implement custom behavior.
  * The default implementation handles tiled imageries in EPSG:4326 or
  * EPSG:3859.
- * @param {!ol.layer.Layer} olLayer
+ * @param {!ol.layer.Base} olLayer
  * @param {?ol.proj.Projection} viewProj Projection of the view.
- * @return {?Cesium.ImageryLayer} null if not possible (or supported)
+ * @return {?Array.&lt;!Cesium.ImageryLayer>} array or null if not possible
+ * (or supported)
  * @protected
  */
-olcs.RasterSynchronizer.prototype.convertLayerToCesiumImagery =
-    olcs.core.tileLayerToImageryLayer;
+olcs.RasterSynchronizer.prototype.convertLayerToCesiumImageries =
+    function(olLayer, viewProj) {
+  var result = olcs.core.tileLayerToImageryLayer(olLayer, viewProj);
+  return result ? [result] : null;
+};
 
 
 /**
  * @inheritDoc
  */
-olcs.RasterSynchronizer.prototype.createSingleCounterpart = function(olLayer) {
+olcs.RasterSynchronizer.prototype.createSingleLayerCounterparts =
+    function(olLayer) {
   var viewProj = this.view.getProjection();
-  var cesiumObject = this.convertLayerToCesiumImagery(olLayer, viewProj);
-  if (!goog.isNull(cesiumObject)) {
-    olLayer.on(
-        ['change:brightness', 'change:contrast', 'change:hue',
-         'change:opacity', 'change:saturation', 'change:visible'],
+  var cesiumObjects = this.convertLayerToCesiumImageries(olLayer, viewProj);
+  if (!goog.isNull(cesiumObjects)) {
+    olLayer.on(['change:opacity', 'change:visible'],
         function(e) {
           // the compiler does not seem to be able to infer this
-          if (!goog.isNull(cesiumObject)) {
-            olcs.core.updateCesiumLayerProperties(olLayer, cesiumObject);
+          goog.asserts.assert(!goog.isNull(cesiumObjects));
+          for (var i = 0; i &lt; cesiumObjects.length; ++i) {
+            olcs.core.updateCesiumLayerProperties(olLayer, cesiumObjects[i]);
           }
         });
-    olcs.core.updateCesiumLayerProperties(olLayer, cesiumObject);
+
+    for (var i = 0; i &lt; cesiumObjects.length; ++i) {
+      olcs.core.updateCesiumLayerProperties(olLayer, cesiumObjects[i]);
+    }
 
     // there is no way to modify Cesium layer extent,
     // we have to recreate when ol3 layer extent changes:
     olLayer.on('change:extent', function(e) {
-      this.cesiumLayers_.remove(cesiumObject, true); // destroy
-      this.ourLayers_.remove(cesiumObject, false);
+      for (var i = 0; i &lt; cesiumObjects.length; ++i) {
+        this.cesiumLayers_.remove(cesiumObjects[i], true); // destroy
+        this.ourLayers_.remove(cesiumObjects[i], false);
+      }
       delete this.layerMap[goog.getUid(olLayer)]; // invalidate the map entry
       this.synchronize();
     }, this);
 
     olLayer.on('change', function(e) {
       // when the source changes, re-add the layer to force update
-      var position = this.cesiumLayers_.indexOf(cesiumObject);
-      if (position >= 0) {
-        this.cesiumLayers_.remove(cesiumObject, false);
-        this.cesiumLayers_.add(cesiumObject, position);
+      for (var i = 0; i &lt; cesiumObjects.length; ++i) {
+        var position = this.cesiumLayers_.indexOf(cesiumObjects[i]);
+        if (position >= 0) {
+          this.cesiumLayers_.remove(cesiumObjects[i], false);
+          this.cesiumLayers_.add(cesiumObjects[i], position);
+        }
       }
     }, this);
   }
 
-  return cesiumObject;
+  return Array.isArray(cesiumObjects) ? cesiumObjects : null;
 };
 
 
@@ -552,10 +604,23 @@ olcs.RasterSynchronizer.prototype.createSingleCounterpart = function(olLayer) {
  */
 olcs.RasterSynchronizer.prototype.orderLayers = function() {
   var layers = [];
-  var groups = [];
   var zIndices = {};
-  olcs.AbstractSynchronizer.flattenLayers(this.mapLayerGroup, layers, groups,
-      zIndices);
+  var fifo = [this.mapLayerGroup];
+
+  while (fifo.length > 0) {
+    var olLayer = fifo.splice(0, 1)[0];
+    layers.push(olLayer);
+    zIndices[goog.getUid(olLayer)] = olLayer.getZIndex();
+
+    if (olLayer instanceof ol.layer.Group) {
+      var sublayers = olLayer.getLayers();
+      if (goog.isDef(sublayers)) {
+        sublayers.forEach(function(el) {
+          fifo.push(el);
+        });
+      }
+    }
+  }
 
   goog.array.stableSort(layers, function(layer1, layer2) {
     return zIndices[goog.getUid(layer1)] - zIndices[goog.getUid(layer2)];
@@ -563,9 +628,9 @@ olcs.RasterSynchronizer.prototype.orderLayers = function() {
 
   layers.forEach(function(olLayer) {
     var olLayerId = goog.getUid(olLayer);
-    var cesiumObject = this.layerMap[olLayerId];
-    if (cesiumObject) {
-      this.raiseToTop(cesiumObject);
+    var cesiumObjects = this.layerMap[olLayerId];
+    if (cesiumObjects) {
+      cesiumObjects.forEach(this.raiseToTop, this);
     }
   }, this);
 };
@@ -586,7 +651,7 @@ olcs.RasterSynchronizer.prototype.raiseToTop = function(counterpart) {
 
 
         <footer>
-            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 10 2015 12:36:08 GMT+0200 (CEST)
+            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 19:02:37 GMT+0200 (CEST)
         </footer>
     </div>
 </div>

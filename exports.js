@@ -4,6 +4,7 @@
  */
 
 goog.require('olcs.AbstractSynchronizer');
+goog.require('olcs.AutoRenderLoop');
 goog.require('olcs.Camera');
 goog.require('olcs.DragBox');
 goog.require('olcs.DragBoxEventType');
@@ -22,6 +23,16 @@ goog.exportProperty(
     olcs.AbstractSynchronizer.prototype,
     'synchronize',
     olcs.AbstractSynchronizer.prototype.synchronize);
+
+goog.exportProperty(
+    olcs.AutoRenderLoop.prototype,
+    'restartRenderLoop',
+    olcs.AutoRenderLoop.prototype.restartRenderLoop);
+
+goog.exportProperty(
+    olcs.AutoRenderLoop.prototype,
+    'setDebug',
+    olcs.AutoRenderLoop.prototype.setDebug);
 
 goog.exportSymbol(
     'olcs.Camera',
@@ -274,6 +285,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     olcs.OLCesium.prototype,
+    'getDataSources',
+    olcs.OLCesium.prototype.getDataSources);
+
+goog.exportProperty(
+    olcs.OLCesium.prototype,
     'getEnabled',
     olcs.OLCesium.prototype.getEnabled);
 
@@ -291,6 +307,16 @@ goog.exportProperty(
     olcs.OLCesium.prototype,
     'setBlockCesiumRendering',
     olcs.OLCesium.prototype.setBlockCesiumRendering);
+
+goog.exportProperty(
+    olcs.OLCesium.prototype,
+    'enableAutoRenderLoop',
+    olcs.OLCesium.prototype.enableAutoRenderLoop);
+
+goog.exportProperty(
+    olcs.OLCesium.prototype,
+    'getAutoRenderLoop',
+    olcs.OLCesium.prototype.getAutoRenderLoop);
 
 goog.exportSymbol(
     'olcs.RasterSynchronizer',

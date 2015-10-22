@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>OL3-Cesium API Documentation - Class: DragBox</title>
+    <title>OL3-Cesium API Documentation - Source: src/autorenderloop.js</title>
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
     <script src="scripts/jquery.min.js"> </script>
@@ -452,358 +452,246 @@
     </ul>
 </div>
     <div class="main">
-        <h1 class="page-title" data-filename="olcs.DragBox.html">Class: DragBox</h1>
+        <h1 class="page-title" data-filename="src_autorenderloop.js.html">Source: src/autorenderloop.js</h1>
         
 
 
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>// Apache v2 license
+// https://github.com/TerriaJS/terriajs/blob/
+// ebd382a8278a817fce316730d9e459bbb9b829e9/lib/Models/Cesium.js
 
-<section>
-    
-<header>
-    <h2>DragBox
-    </h2>
-    
-</header>  
-
-<article>
-    <div class="container-overview">
-    
-    
-    
-        
-<dt class="unstable">
-    <div class="nameContainer">
-        
-        <h4 class="name" id="DragBox">
-            new olcs.DragBox<span class="signature">(<span class="optional">opt_options</span>)</span>
-            
-            
-<span class="stability experimental">experimental</span>
+goog.provide('olcs.AutoRenderLoop');
 
 
-        </h4>
-        
-        <div class="tag-source">
-            <a href="src_dragbox.js.html">src/dragbox.js</a>, <a href="src_dragbox.js.html#line31">line 31</a>
-        </div>
-        
-        
-    </div>
-    
-</dt>
-<dd class="unstable">
-    
-    
 
-    
-    
-    
-    
-    
-    
-        
+/**
+ * @constructor
+ * @param {olcs.OLCesium} ol3d
+ * @param {boolean} debug
+ */
+olcs.AutoRenderLoop = function(ol3d, debug) {
+  this.ol3d = ol3d;
+  this.scene_ = ol3d.getCesiumScene();
+  this.verboseRendering = debug;
+  this._boundNotifyRepaintRequired = this.notifyRepaintRequired.bind(this);
 
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr class="">
-            
-                <td class="name"><code>options</code></td>
-            
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
+  this.lastCameraViewMatrix_ = new Cesium.Matrix4();
+  this.lastCameraMoveTime_ = 0;
+  this.stoppedRendering = false;
+
+  this._removePostRenderListener = this.scene_.postRender.addEventListener(
+      this.postRender.bind(this));
 
 
-            
-            </td>
-            
-            
-            
-            
-            <td  class="description last">
-                
-                <p>Options.</p></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
-    
-    
-    
-    
-<dl class="details">
-    
-        
-    
-    
-    
+  // Detect available wheel event
+  this._wheelEvent = '';
+  if ('onwheel' in this.scene_.canvas) {
+    // spec event type
+    this._wheelEvent = 'wheel';
+  } else if (!!document['onmousewheel']) {
+    // legacy event type
+    this._wheelEvent = 'mousewheel';
+  } else {
+    // older Firefox
+    this._wheelEvent = 'DOMMouseScroll';
+  }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-</dl>
+  this._originalLoadWithXhr = Cesium.loadWithXhr.load;
+  this._originalScheduleTask = Cesium.TaskProcessor.prototype.scheduleTask;
 
-    
-    
-
-    
-
-    
-    
-    
-    
-    
-    
-    
-</dd>
-
-    
-    </div>
-    
-    
-
-    
-        <h3 class="subsection-title">Extends</h3>
-        
-        <ul>
-            <li>goog.events.EventTarget</li>
-        </ul>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-        <h3 class="subsection-title">Members</h3>
-        
-        <dl>
-            
-<dt class="unstable">
-    <div class="nameContainer">
-        <h4 class="name" id="listen">
-            listen
-            
-<span class="stability experimental">experimental</span>
+  this.enable();
+};
 
 
-        </h4>
-    </div>
-    
-</dt>
-<dd class="unstable">
-    
-    <div class="description">
-        <p>Adds an event listener. A listener can only be added once to an
-object and if it is added again the key for the listener is
-returned. Note that if the existing listener is a one-off listener
-(registered via listenOnce), it will no longer be a one-off
-listener after a call to listen().</p>
-    </div>
-    
-    
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-    
-    
-</dd>
-
-        </dl>
-    
-    
-    
-        <h3 class="subsection-title">Methods</h3>
-        
-        <dl>
-            
-<dt class="unstable">
-    <div class="nameContainer">
-        
-        <h4 class="name" id="setScene">
-            setScene<span class="signature">(scene)</span>
-            
-            
-<span class="stability experimental">experimental</span>
+/**
+ * Force a repaint when the mouse moves or the window changes size.
+ * @param {string} key
+ * @param {boolean} capture
+ * @private
+ */
+olcs.AutoRenderLoop.prototype.repaintOn_ = function(key, capture) {
+  var canvas = this.scene_.canvas;
+  canvas.addEventListener(key, this._boundNotifyRepaintRequired, capture);
+};
 
 
-        </h4>
-        
-        <div class="tag-source">
-            <a href="src_dragbox.js.html">src/dragbox.js</a>, <a href="src_dragbox.js.html#line183">line 183</a>
-        </div>
-        
-        
-    </div>
-    
-</dt>
-<dd class="unstable">
-    
-    
-
-    
-    
-    
-    
-    
-    
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr class="">
-            
-                <td class="name"><code>scene</code></td>
-            
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">Cesium.Scene</span>
+/**
+ * @param {string} key
+ * @param {boolean} capture
+ * @private
+ */
+olcs.AutoRenderLoop.prototype.removeRepaintOn_ = function(key, capture) {
+  var canvas = this.scene_.canvas;
+  canvas.removeEventListener(key, this._boundNotifyRepaintRequired, capture);
+};
 
 
-            
-            </td>
-            
-            
-            
-            
-            <td  class="description last">
-                
-                <p>Scene.</p></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
-    
-    
-    
-    
-<dl class="details">
-    
-        
-    
-    
-    
+/**
+ * Enable.
+ */
+olcs.AutoRenderLoop.prototype.enable = function() {
+  this.repaintOn_('mousemove', false);
+  this.repaintOn_('mousedown', false);
+  this.repaintOn_('mouseup', false);
+  this.repaintOn_('touchstart', false);
+  this.repaintOn_('touchend', false);
+  this.repaintOn_('touchmove', false);
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-</dl>
+  if (!!window['PointerEvent']) {
+    this.repaintOn_('pointerdown', false);
+    this.repaintOn_('pointerup', false);
+    this.repaintOn_('pointermove', false);
+  }
 
-    
-    
+  this.repaintOn_(this._wheelEvent, false);
 
-    
+  window.addEventListener('resize', this._boundNotifyRepaintRequired, false);
 
-    
-    
-    
-    
-    
-    
-    
-</dd>
+  // Hacky way to force a repaint when an async load request completes
+  var that = this;
+  Cesium.loadWithXhr.load = function(url, responseType, method, data,
+      headers, deferred, overrideMimeType, preferText, timeout) {
+    deferred['promise']['always'](that._boundNotifyRepaintRequired);
+    that._originalLoadWithXhr(url, responseType, method, data, headers,
+        deferred, overrideMimeType, preferText, timeout);
+  };
 
-        </dl>
-    
-    
-    
-    
-    
-</article>
+  // Hacky way to force a repaint when a web worker sends something back.
+  Cesium.TaskProcessor.prototype.scheduleTask =
+      function(parameters, transferableObjects) {
+    var result = that._originalScheduleTask.call(this, parameters,
+        transferableObjects);
 
-</section>  
+    var taskProcessor = this;
+    if (!taskProcessor._originalWorkerMessageSinkRepaint) {
+      var worker = taskProcessor['_worker'];
+      taskProcessor._originalWorkerMessageSinkRepaint = worker.onmessage;
+      worker.onmessage = function(event) {
+        taskProcessor._originalWorkerMessageSinkRepaint(event);
+        that.notifyRepaintRequired();
+      };
+    }
+
+    return result;
+  };
+
+  // Listen for changes on the layer group
+  this.ol3d.getOlMap().getLayerGroup().on('change',
+      this._boundNotifyRepaintRequired);
+};
+
+
+/**
+ * Disable.
+ */
+olcs.AutoRenderLoop.prototype.disable = function() {
+  if (!!this._removePostRenderListener) {
+    this._removePostRenderListener();
+    this._removePostRenderListener = undefined;
+  }
+
+  this.removeRepaintOn_('mousemove', false);
+  this.removeRepaintOn_('mousedown', false);
+  this.removeRepaintOn_('mouseup', false);
+  this.removeRepaintOn_('touchstart', false);
+  this.removeRepaintOn_('touchend', false);
+  this.removeRepaintOn_('touchmove', false);
+
+  if (!!window['PointerEvent']) {
+    this.removeRepaintOn_('pointerdown', false);
+    this.removeRepaintOn_('pointerup', false);
+    this.removeRepaintOn_('pointermove', false);
+  }
+
+  this.removeRepaintOn_(this._wheelEvent, false);
+
+  window.removeEventListener('resize', this._boundNotifyRepaintRequired, false);
+
+  Cesium.loadWithXhr.load = this._originalLoadWithXhr;
+  Cesium.TaskProcessor.prototype.scheduleTask = this._originalScheduleTask;
+
+  this.ol3d.getOlMap().getLayerGroup().un('change',
+      this._boundNotifyRepaintRequired);
+};
+
+
+/**
+ * @param {number} date
+ */
+olcs.AutoRenderLoop.prototype.postRender = function(date) {
+  // We can safely stop rendering when:
+  //  - the camera position hasn't changed in over a second,
+  //  - there are no tiles waiting to load, and
+  //  - the clock is not animating
+  //  - there are no tweens in progress
+
+  var now = Date.now();
+
+  var scene = this.scene_;
+  var camera = scene.camera;
+
+  if (!Cesium.Matrix4.equalsEpsilon(this.lastCameraViewMatrix_,
+      camera.viewMatrix, 1e-5)) {
+    this.lastCameraMoveTime_ = now;
+  }
+
+  var cameraMovedInLastSecond = now - this.lastCameraMoveTime_ &lt; 1000;
+
+  var surface = scene.globe['_surface'];
+  var tilesWaiting = !surface['_tileProvider'].ready ||
+      surface['_tileLoadQueue'].length > 0 ||
+      surface['_debug']['tilesWaitingForChildren'] > 0;
+
+  var tweens = scene['tweens'];
+  if (!cameraMovedInLastSecond &amp;&amp; !tilesWaiting &amp;&amp; tweens.length == 0) {
+    if (this.verboseRendering) {
+      console.log('stopping rendering @ ' + Date.now());
+    }
+    this.ol3d.setBlockCesiumRendering(true);
+    this.stoppedRendering = true;
+  }
+
+  Cesium.Matrix4.clone(camera.viewMatrix, this.lastCameraViewMatrix_);
+};
+
+
+/**
+ * Restart render loop.
+ * Force a restart of the render loop.
+ * @api
+ */
+olcs.AutoRenderLoop.prototype.restartRenderLoop = function() {
+  this.notifyRepaintRequired();
+};
+
+
+/**
+ * Notifies the viewer that a repaint is required.
+ */
+olcs.AutoRenderLoop.prototype.notifyRepaintRequired = function() {
+  if (this.verboseRendering &amp;&amp; this.stoppedRendering) {
+    console.log('starting rendering @ ' + Date.now());
+  }
+  this._lastCameraMoveTime = Date.now();
+  // TODO: do not unblock if not blocked by us
+  this.ol3d.setBlockCesiumRendering(false);
+  this.stoppedRendering = false;
+};
+
+
+/**
+ * @param {boolean} debug
+ * @api
+ */
+olcs.AutoRenderLoop.prototype.setDebug = function(debug) {
+  this.verboseRendering = debug;
+};
+</code></pre>
+        </article>
+    </section>
 
 
 

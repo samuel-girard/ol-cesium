@@ -48,6 +48,35 @@
             </ul>
         </li>
     
+        <li class="item" data-name="olcs.AutoRenderLoop">
+            <span class="title">
+                <a href="olcs.AutoRenderLoop.html">olcs.AutoRenderLoop</a>
+                
+            </span>
+            <ul class="members itemMembers">
+            
+            </ul>
+            <ul class="typedefs itemMembers">
+            
+            </ul>
+            <ul class="methods itemMembers">
+            
+            <span class="subtitle">Methods</span>
+            
+                <li data-name="olcs.AutoRenderLoop#restartRenderLoop" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#restartRenderLoop">restartRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.AutoRenderLoop#setDebug" class="unstable">
+                    <a href="olcs.AutoRenderLoop.html#setDebug">setDebug</a>
+                </li>
+            
+            </ul>
+            <ul class="fires itemMembers">
+            
+            </ul>
+        </li>
+    
         <li class="item" data-name="olcs.Camera">
             <span class="title">
                 <a href="olcs.Camera.html">olcs.Camera</a>
@@ -246,12 +275,24 @@
             
             <span class="subtitle">Methods</span>
             
+                <li data-name="olcs.OLCesium#enableAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#enableAutoRenderLoop">enableAutoRenderLoop</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getAutoRenderLoop" class="unstable">
+                    <a href="olcs.OLCesium.html#getAutoRenderLoop">getAutoRenderLoop</a>
+                </li>
+            
                 <li data-name="olcs.OLCesium#getCamera" class="unstable">
                     <a href="olcs.OLCesium.html#getCamera">getCamera</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getCesiumScene" class="unstable">
                     <a href="olcs.OLCesium.html#getCesiumScene">getCesiumScene</a>
+                </li>
+            
+                <li data-name="olcs.OLCesium#getDataSources" class="unstable">
+                    <a href="olcs.OLCesium.html#getDataSources">getDataSources</a>
                 </li>
             
                 <li data-name="olcs.OLCesium#getEnabled" class="unstable">
@@ -422,6 +463,7 @@
 
 goog.require('goog.async.AnimationDelay');
 goog.require('goog.dom');
+goog.require('olcs.AutoRenderLoop');
 goog.require('olcs.Camera');
 goog.require('olcs.RasterSynchronizer');
 goog.require('olcs.VectorSynchronizer');
@@ -434,6 +476,12 @@ goog.require('olcs.VectorSynchronizer');
  * @api
  */
 olcs.OLCesium = function(options) {
+
+  /**
+   * @type {olcs.AutoRenderLoop}
+   * @private
+   */
+  this.autoRenderLoop_ = null;
 
   /**
    * @type {!ol.Map}
@@ -508,7 +556,7 @@ olcs.OLCesium = function(options) {
 
   var sscc = this.scene_.screenSpaceCameraController;
   sscc.inertiaSpin = 0;
-  sscc.ineartiaTranslate = 0;
+  sscc.inertiaTranslate = 0;
   sscc.inertiaZoom = 0;
 
   sscc.tiltEventTypes.push({
@@ -539,12 +587,21 @@ olcs.OLCesium = function(options) {
   this.scene_.globe = this.globe_;
   this.scene_.skyAtmosphere = new Cesium.SkyAtmosphere();
 
+  this.dataSourceCollection_ = new Cesium.DataSourceCollection();
+  this.dataSourceDisplay_ = new Cesium.DataSourceDisplay({
+    scene: this.scene_,
+    dataSourceCollection: this.dataSourceCollection_
+  });
+
   var synchronizers = goog.isDef(options.createSynchronizers) ?
       options.createSynchronizers(this.map_, this.scene_) :
       [
         new olcs.RasterSynchronizer(this.map_, this.scene_),
         new olcs.VectorSynchronizer(this.map_, this.scene_)
       ];
+
+  // Assures correct canvas size after initialisation
+  this.handleResize_();
 
   for (var i = synchronizers.length - 1; i >= 0; --i) {
     synchronizers[i].synchronize();
@@ -558,13 +615,12 @@ olcs.OLCesium = function(options) {
     }
   }
 
-  this.camera_.readFromView();
-
   this.cesiumRenderingDelay_ = new goog.async.AnimationDelay(function(time) {
     if (!this.blockCesiumRendering_) {
       this.scene_.initializeFrame();
       this.handleResize_();
-      this.scene_.render();
+      this.dataSourceDisplay_.update(time);
+      this.scene_.render(time);
       this.enabled_ &amp;&amp; this.camera_.checkCameraChange();
     }
     this.cesiumRenderingDelay_.start();
@@ -622,6 +678,15 @@ olcs.OLCesium.prototype.getCesiumScene = function() {
 
 
 /**
+ * @return {!Cesium.DataSourceCollection}
+ * @api
+ */
+olcs.OLCesium.prototype.getDataSources = function() {
+  return this.dataSourceCollection_;
+};
+
+
+/**
  * @return {boolean}
  * @api
  */
@@ -664,9 +729,9 @@ olcs.OLCesium.prototype.setEnabled = function(enable) {
   } else {
     if (this.isOverMap_) {
       var interactions = this.map_.getInteractions();
-      goog.array.forEach(this.pausedInteractions_, function(el, i, arr) {
-        interactions.push(el);
-      }, this);
+      this.pausedInteractions_.forEach(function(interaction) {
+        interactions.push(interaction);
+      });
       this.pausedInteractions_.length = 0;
 
       if (!goog.isNull(this.hiddenRootGroup_)) {
@@ -716,6 +781,28 @@ olcs.OLCesium.prototype.warmUp = function(height, timeout) {
 olcs.OLCesium.prototype.setBlockCesiumRendering = function(block) {
   this.blockCesiumRendering_ = block;
 };
+
+
+/**
+ * Render the globe only when necessary in order to save resources.
+ * Experimental.
+ * @api
+ */
+olcs.OLCesium.prototype.enableAutoRenderLoop = function() {
+  if (!this.autoRenderLoop_) {
+    this.autoRenderLoop_ = new olcs.AutoRenderLoop(this, false);
+  }
+};
+
+
+/**
+ * Get the autorender loop.
+ * @return {?olcs.AutoRenderLoop}
+ * @api
+*/
+olcs.OLCesium.prototype.getAutoRenderLoop = function() {
+  return this.autoRenderLoop_;
+};
 </code></pre>
         </article>
     </section>
@@ -725,7 +812,7 @@ olcs.OLCesium.prototype.setBlockCesiumRendering = function(block) {
 
 
         <footer>
-            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 10 2015 12:36:08 GMT+0200 (CEST)
+            Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 19:02:37 GMT+0200 (CEST)
         </footer>
     </div>
 </div>
