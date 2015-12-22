@@ -155,6 +155,7 @@ goog.require('ol.proj.Projection');
 goog.require('ol.proj.ProjectionLike');
 goog.require('ol.proj.Units');
 goog.require('ol.proj.common');
+goog.require('ol.render');
 goog.require('ol.render.Event');
 goog.require('ol.render.EventType');
 goog.require('ol.render.Feature');
@@ -1051,6 +1052,10 @@ goog.exportProperty(
     ol.Overlay.prototype,
     'setPositioning',
     ol.Overlay.prototype.setPositioning);
+
+goog.exportSymbol(
+    'ol.render.toContext',
+    ol.render.toContext);
 
 goog.exportSymbol(
     'ol.size.toSize',
@@ -2704,6 +2709,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.Interaction.prototype,
+    'getMap',
+    ol.interaction.Interaction.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.Interaction.prototype,
     'setActive',
     ol.interaction.Interaction.prototype.setActive);
 
@@ -4224,6 +4234,11 @@ goog.exportProperty(
     olcs.OLCesium.prototype,
     'getDataSources',
     olcs.OLCesium.prototype.getDataSources);
+
+goog.exportProperty(
+    olcs.OLCesium.prototype,
+    'getDataSourceDisplay',
+    olcs.OLCesium.prototype.getDataSourceDisplay);
 
 goog.exportProperty(
     olcs.OLCesium.prototype,
@@ -9555,6 +9570,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.DoubleClickZoom.prototype,
+    'getMap',
+    ol.interaction.DoubleClickZoom.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.DoubleClickZoom.prototype,
     'setActive',
     ol.interaction.DoubleClickZoom.prototype.setActive);
 
@@ -9627,6 +9647,11 @@ goog.exportProperty(
     ol.interaction.DragAndDrop.prototype,
     'getActive',
     ol.interaction.DragAndDrop.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.DragAndDrop.prototype,
+    'getMap',
+    ol.interaction.DragAndDrop.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.DragAndDrop.prototype,
@@ -9705,6 +9730,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.Pointer.prototype,
+    'getMap',
+    ol.interaction.Pointer.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.Pointer.prototype,
     'setActive',
     ol.interaction.Pointer.prototype.setActive);
 
@@ -9777,6 +9807,11 @@ goog.exportProperty(
     ol.interaction.DragBox.prototype,
     'getActive',
     ol.interaction.DragBox.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.DragBox.prototype,
+    'getMap',
+    ol.interaction.DragBox.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.DragBox.prototype,
@@ -9855,6 +9890,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.DragPan.prototype,
+    'getMap',
+    ol.interaction.DragPan.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.DragPan.prototype,
     'setActive',
     ol.interaction.DragPan.prototype.setActive);
 
@@ -9930,6 +9970,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.DragRotateAndZoom.prototype,
+    'getMap',
+    ol.interaction.DragRotateAndZoom.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.DragRotateAndZoom.prototype,
     'setActive',
     ol.interaction.DragRotateAndZoom.prototype.setActive);
 
@@ -10002,6 +10047,11 @@ goog.exportProperty(
     ol.interaction.DragRotate.prototype,
     'getActive',
     ol.interaction.DragRotate.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.DragRotate.prototype,
+    'getMap',
+    ol.interaction.DragRotate.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.DragRotate.prototype,
@@ -10085,6 +10135,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.DragZoom.prototype,
+    'getMap',
+    ol.interaction.DragZoom.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.DragZoom.prototype,
     'setActive',
     ol.interaction.DragZoom.prototype.setActive);
 
@@ -10157,6 +10212,11 @@ goog.exportProperty(
     ol.interaction.Draw.prototype,
     'getActive',
     ol.interaction.Draw.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.Draw.prototype,
+    'getMap',
+    ol.interaction.Draw.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.Draw.prototype,
@@ -10235,6 +10295,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.KeyboardPan.prototype,
+    'getMap',
+    ol.interaction.KeyboardPan.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.KeyboardPan.prototype,
     'setActive',
     ol.interaction.KeyboardPan.prototype.setActive);
 
@@ -10307,6 +10372,11 @@ goog.exportProperty(
     ol.interaction.KeyboardZoom.prototype,
     'getActive',
     ol.interaction.KeyboardZoom.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.KeyboardZoom.prototype,
+    'getMap',
+    ol.interaction.KeyboardZoom.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.KeyboardZoom.prototype,
@@ -10385,6 +10455,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.Modify.prototype,
+    'getMap',
+    ol.interaction.Modify.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.Modify.prototype,
     'setActive',
     ol.interaction.Modify.prototype.setActive);
 
@@ -10457,6 +10532,11 @@ goog.exportProperty(
     ol.interaction.MouseWheelZoom.prototype,
     'getActive',
     ol.interaction.MouseWheelZoom.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.MouseWheelZoom.prototype,
+    'getMap',
+    ol.interaction.MouseWheelZoom.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.MouseWheelZoom.prototype,
@@ -10535,6 +10615,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.PinchRotate.prototype,
+    'getMap',
+    ol.interaction.PinchRotate.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.PinchRotate.prototype,
     'setActive',
     ol.interaction.PinchRotate.prototype.setActive);
 
@@ -10607,6 +10692,11 @@ goog.exportProperty(
     ol.interaction.PinchZoom.prototype,
     'getActive',
     ol.interaction.PinchZoom.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.PinchZoom.prototype,
+    'getMap',
+    ol.interaction.PinchZoom.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.PinchZoom.prototype,
@@ -10685,6 +10775,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.Select.prototype,
+    'getMap',
+    ol.interaction.Select.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.Select.prototype,
     'setActive',
     ol.interaction.Select.prototype.setActive);
 
@@ -10760,6 +10855,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.interaction.Snap.prototype,
+    'getMap',
+    ol.interaction.Snap.prototype.getMap);
+
+goog.exportProperty(
+    ol.interaction.Snap.prototype,
     'setActive',
     ol.interaction.Snap.prototype.setActive);
 
@@ -10832,6 +10932,11 @@ goog.exportProperty(
     ol.interaction.Translate.prototype,
     'getActive',
     ol.interaction.Translate.prototype.getActive);
+
+goog.exportProperty(
+    ol.interaction.Translate.prototype,
+    'getMap',
+    ol.interaction.Translate.prototype.getMap);
 
 goog.exportProperty(
     ol.interaction.Translate.prototype,
