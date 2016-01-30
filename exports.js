@@ -223,8 +223,6 @@ goog.require('ol.xml');
 goog.require('olcs.AbstractSynchronizer');
 goog.require('olcs.AutoRenderLoop');
 goog.require('olcs.Camera');
-goog.require('olcs.DragBox');
-goog.require('olcs.DragBoxEventType');
 goog.require('olcs.FeatureConverter');
 goog.require('olcs.OLCesium');
 goog.require('olcs.RasterSynchronizer');
@@ -1070,6 +1068,11 @@ goog.exportProperty(
     ol.VectorTile.prototype,
     'getFormat',
     ol.VectorTile.prototype.getFormat);
+
+goog.exportProperty(
+    ol.VectorTile.prototype,
+    'setFeatures',
+    ol.VectorTile.prototype.setFeatures);
 
 goog.exportProperty(
     ol.VectorTile.prototype,
@@ -2348,6 +2351,10 @@ goog.exportProperty(
     ol.proj.Projection.prototype.getPointResolution);
 
 goog.exportSymbol(
+    'ol.proj.setProj4',
+    ol.proj.setProj4);
+
+goog.exportSymbol(
     'ol.proj.addEquivalentProjections',
     ol.proj.addEquivalentProjections);
 
@@ -2640,6 +2647,11 @@ goog.exportProperty(
     ol.DragBoxEvent.prototype,
     'coordinate',
     ol.DragBoxEvent.prototype.coordinate);
+
+goog.exportProperty(
+    ol.DragBoxEvent.prototype,
+    'mapBrowserEvent',
+    ol.DragBoxEvent.prototype.mapBrowserEvent);
 
 goog.exportSymbol(
     'ol.interaction.DragBox',
@@ -3019,6 +3031,11 @@ goog.exportProperty(
     ol.geom.LineString.prototype,
     'getCoordinates',
     ol.geom.LineString.prototype.getCoordinates);
+
+goog.exportProperty(
+    ol.geom.LineString.prototype,
+    'getCoordinateAt',
+    ol.geom.LineString.prototype.getCoordinateAt);
 
 goog.exportProperty(
     ol.geom.LineString.prototype,
@@ -4127,20 +4144,6 @@ goog.exportSymbol(
 goog.exportSymbol(
     'olcs.core.convertColorToCesium',
     olcs.core.convertColorToCesium);
-
-goog.exportSymbol(
-    'olcs.DragBox',
-    olcs.DragBox);
-
-goog.exportProperty(
-    olcs.DragBox.prototype,
-    'setScene',
-    olcs.DragBox.prototype.setScene);
-
-goog.exportProperty(
-    olcs.DragBox.prototype,
-    'listen',
-    olcs.DragBox.prototype.listen);
 
 goog.exportSymbol(
     'olcs.FeatureConverter',
