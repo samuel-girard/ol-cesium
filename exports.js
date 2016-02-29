@@ -9,6 +9,7 @@ goog.require('ol.Collection');
 goog.require('ol.CollectionEvent');
 goog.require('ol.CollectionEventType');
 goog.require('ol.Color');
+goog.require('ol.ColorLike');
 goog.require('ol.Coordinate');
 goog.require('ol.CoordinateFormatType');
 goog.require('ol.DeviceOrientation');
@@ -51,6 +52,7 @@ goog.require('ol.ViewHint');
 goog.require('ol.ViewProperty');
 goog.require('ol.animation');
 goog.require('ol.color');
+goog.require('ol.colorlike');
 goog.require('ol.control');
 goog.require('ol.control.Attribution');
 goog.require('ol.control.Control');
@@ -323,6 +325,10 @@ goog.exportProperty(
     ol.Collection.prototype,
     'setAt',
     ol.Collection.prototype.setAt);
+
+goog.exportSymbol(
+    'ol.colorlike.asColorLike',
+    ol.colorlike.asColorLike);
 
 goog.exportSymbol(
     'ol.coordinate.add',
@@ -2594,11 +2600,6 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.layer.VectorTile.prototype,
-    'getSource',
-    ol.layer.VectorTile.prototype.getSource);
-
-goog.exportProperty(
-    ol.layer.VectorTile.prototype,
     'getUseInterimTilesOnError',
     ol.layer.VectorTile.prototype.getUseInterimTilesOnError);
 
@@ -4680,11 +4681,6 @@ goog.exportProperty(
     ol.MapBrowserPointerEvent.prototype,
     'dragging',
     ol.MapBrowserPointerEvent.prototype.dragging);
-
-goog.exportProperty(
-    ol.MapBrowserPointerEvent.prototype,
-    'preventDefault',
-    ol.MapBrowserPointerEvent.prototype.preventDefault);
 
 goog.exportProperty(
     ol.MapBrowserPointerEvent.prototype,
@@ -9350,6 +9346,11 @@ goog.exportProperty(
     ol.layer.Tile.prototype,
     'unByKey',
     ol.layer.Tile.prototype.unByKey);
+
+goog.exportProperty(
+    ol.layer.VectorTile.prototype,
+    'getSource',
+    ol.layer.VectorTile.prototype.getSource);
 
 goog.exportProperty(
     ol.layer.VectorTile.prototype,
