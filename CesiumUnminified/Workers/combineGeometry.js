@@ -70,6 +70,7 @@ define('Core/freezeObject',[
 
     return freezeObject;
 });
+
 /*global define*/
 define('Core/defaultValue',[
         './freezeObject'
@@ -390,6 +391,7 @@ MersenneTwister.prototype.random = function() {
 
 return MersenneTwister;
 });
+
 /*global define*/
 define('Core/Math',[
         '../ThirdParty/mersenne-twister',
@@ -853,6 +855,25 @@ define('Core/Math',[
         }
 
         return simplified;
+    };
+
+    /**
+     * Convenience function that clamps a latitude value, in radians, to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
+     * Useful for sanitizing data before use in objects requiring correct range.
+     *
+     * @param {Number} angle The latitude value, in radians, to clamp to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
+     * @returns {Number} The latitude value clamped to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
+     *
+     * @example
+     * // Clamp 108 degrees latitude to 90 degrees latitude
+     * var latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
+     */
+    CesiumMath.clampToLatitudeRange = function(angle) {
+                if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+                
+        return CesiumMath.clamp(angle, -1*CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
     };
 
     /**
@@ -1601,6 +1622,11 @@ define('Core/Cartesian3',[
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
         result.z = cartesian.z / magnitude;
+
+                if (isNaN(result.x) || isNaN(result.y) || isNaN(result.z)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        
         return result;
     };
 
@@ -2704,6 +2730,7 @@ define('Core/defineProperties',[
 
     return defineProperties;
 });
+
 /*global define*/
 define('Core/Ellipsoid',[
         './Cartesian3',
@@ -3464,6 +3491,7 @@ define('Core/Intersect',[
 
     return freezeObject(Intersect);
 });
+
 /*global define*/
 define('Core/Interval',[
         './defaultValue'
@@ -3498,6 +3526,193 @@ define('Core/Interval',[
 });
 
 /*global define*/
+define('Core/HeadingPitchRoll',[
+    './defaultValue',
+    './defined',
+    './DeveloperError',
+    './Math'
+], function(
+    defaultValue,
+    defined,
+    DeveloperError,
+    CesiumMath) {
+    "use strict";
+
+    /**
+     * A rotation expressed as a heading, pitch, and roll. Heading is the rotation about the
+     * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
+     * the positive x axis.
+     * @alias HeadingPitchRoll
+     * @constructor
+     *
+     * @param {Number} [heading=0.0] The heading component in radians.
+     * @param {Number} [pitch=0.0] The pitch component in radians.
+     * @param {Number} [roll=0.0] The roll component in radians.
+     */
+    function HeadingPitchRoll(heading, pitch, roll) {
+        this.heading = defaultValue(heading, 0.0);
+        this.pitch = defaultValue(pitch, 0.0);
+        this.roll = defaultValue(roll, 0.0);
+    }
+
+    /**
+     * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
+     *
+     * @param {Quaternion} quaternion The quaternion from which to retrieve heading, pitch, and roll, all expressed in radians.
+     * @param {Quaternion} [result] The object in which to store the result. If not provided, a new instance is created and returned.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
+     */
+    HeadingPitchRoll.fromQuaternion = function(quaternion, result) {
+                if (!defined(quaternion)) {
+            throw new DeveloperError('quaternion is required');
+        }
+                if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+        var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
+        var denominatorRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
+        var numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
+        var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+        var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
+        result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
+        result.roll = Math.atan2(numeratorRoll, denominatorRoll);
+        result.pitch = -Math.asin(test);
+        return result;
+    };
+
+    /**
+     * Returns a new HeadingPitchRoll instance from angles given in degrees.
+     *
+     * @param {Number} heading the heading in degrees
+     * @param {Number} pitch the pitch in degrees
+     * @param {Number} roll the heading in degrees
+     * @param {HeadingPitchRoll} [result] The object in which to store the result. If not provided, a new instance is created and returned.
+     * @returns {HeadingPitchRoll} A new HeadingPitchRoll instance
+     */
+    HeadingPitchRoll.fromDegrees = function(heading, pitch, roll, result) {
+                if (!defined(heading)) {
+            throw new DeveloperError('heading is required');
+        }
+        if (!defined(pitch)) {
+            throw new DeveloperError('pitch is required');
+        }
+        if (!defined(roll)) {
+            throw new DeveloperError('roll is required');
+        }
+                if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+        result.heading = heading * CesiumMath.RADIANS_PER_DEGREE;
+        result.pitch = pitch * CesiumMath.RADIANS_PER_DEGREE;
+        result.roll = roll * CesiumMath.RADIANS_PER_DEGREE;
+        return result;
+    };
+
+    /**
+     * Duplicates a HeadingPitchRoll instance.
+     *
+     * @param {HeadingPitchRoll} headingPitchRoll The HeadingPitchRoll to duplicate.
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided. (Returns undefined if headingPitchRoll is undefined)
+     */
+    HeadingPitchRoll.clone = function(headingPitchRoll, result) {
+        if (!defined(headingPitchRoll)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            return new HeadingPitchRoll(headingPitchRoll.heading, headingPitchRoll.pitch, headingPitchRoll.roll);
+        }
+        result.heading = headingPitchRoll.heading;
+        result.pitch = headingPitchRoll.pitch;
+        result.roll = headingPitchRoll.roll;
+        return result;
+    };
+
+    /**
+     * Compares the provided HeadingPitchRolls componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
+     * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.equals = function(left, right) {
+        return (left === right) ||
+            ((defined(left)) &&
+                (defined(right)) &&
+                (left.heading === right.heading) &&
+                (left.pitch === right.pitch) &&
+                (left.roll === right.roll));
+    };
+
+    /**
+     * Compares the provided HeadingPitchRolls componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
+     * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
+        return (left === right) ||
+            (defined(left) &&
+                defined(right) &&
+                CesiumMath.equalsEpsilon(left.heading, right.heading, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.pitch, right.pitch, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.roll, right.roll, relativeEpsilon, absoluteEpsilon));
+    };
+
+    /**
+     * Duplicates this HeadingPitchRoll instance.
+     *
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
+     */
+    HeadingPitchRoll.prototype.clone = function(result) {
+        return HeadingPitchRoll.clone(this, result);
+    };
+
+    /**
+     * Compares this HeadingPitchRoll against the provided HeadingPitchRoll componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.prototype.equals = function(right) {
+        return HeadingPitchRoll.equals(this, right);
+    };
+
+    /**
+     * Compares this HeadingPitchRoll against the provided HeadingPitchRoll componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.prototype.equalsEpsilon = function(right, relativeEpsilon, absoluteEpsilon) {
+        return HeadingPitchRoll.equalsEpsilon(this, right, relativeEpsilon, absoluteEpsilon);
+    };
+
+    /**
+     * Creates a string representing this HeadingPitchRoll in the format '(heading, pitch, roll)' in radians.
+     *
+     * @returns {String} A string representing the provided HeadingPitchRoll in the format '(heading, pitch, roll)'.
+     */
+    HeadingPitchRoll.prototype.toString = function() {
+        return '(' + this.heading + ', ' + this.pitch + ', ' + this.roll + ')';
+    };
+
+    return HeadingPitchRoll;
+});
+
+/*global define*/
 define('Core/Matrix3',[
         './Cartesian3',
         './defaultValue',
@@ -3505,6 +3720,7 @@ define('Core/Matrix3',[
         './defineProperties',
         './DeveloperError',
         './freezeObject',
+        './HeadingPitchRoll',
         './Math'
     ], function(
         Cartesian3,
@@ -3513,6 +3729,7 @@ define('Core/Matrix3',[
         defineProperties,
         DeveloperError,
         freezeObject,
+        HeadingPitchRoll,
         CesiumMath) {
     'use strict';
 
@@ -3780,6 +3997,53 @@ define('Core/Matrix3',[
             return new Matrix3(m00, m01, m02,
                                m10, m11, m12,
                                m20, m21, m22);
+        }
+        result[0] = m00;
+        result[1] = m10;
+        result[2] = m20;
+        result[3] = m01;
+        result[4] = m11;
+        result[5] = m21;
+        result[6] = m02;
+        result[7] = m12;
+        result[8] = m22;
+        return result;
+    };
+
+    /**
+     * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
+     *
+     * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns {Matrix3} The 3x3 rotation matrix from this headingPitchRoll.
+     */
+    Matrix3.fromHeadingPitchRoll = function(headingPitchRoll, result) {
+                if (!defined(headingPitchRoll)) {
+            throw new DeveloperError('headingPitchRoll is required');
+        }
+                var cosTheta = Math.cos(-headingPitchRoll.pitch);
+        var cosPsi = Math.cos(-headingPitchRoll.heading);
+        var cosPhi = Math.cos(headingPitchRoll.roll);
+        var sinTheta = Math.sin(-headingPitchRoll.pitch);
+        var sinPsi = Math.sin(-headingPitchRoll.heading);
+        var sinPhi = Math.sin(headingPitchRoll.roll);
+
+        var m00 = cosTheta * cosPsi;
+        var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;
+        var m02 = sinPhi * sinPsi + cosPhi * sinTheta * cosPsi;
+
+        var m10 = cosTheta * sinPsi;
+        var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
+        var m12 = -sinTheta * cosPhi + cosPhi * sinTheta * sinPsi;
+
+        var m20 = -sinTheta;
+        var m21 = sinPhi * cosTheta;
+        var m22 = cosPhi * cosTheta;
+
+        if (!defined(result)) {
+            return new Matrix3(m00, m01, m02,
+                m10, m11, m12,
+                m20, m21, m22);
         }
         result[0] = m00;
         result[1] = m10;
@@ -4758,10 +5022,10 @@ define('Core/Matrix3',[
 
         var determinant = Matrix3.determinant(matrix);
 
-        if (Math.abs(determinant) <= CesiumMath.EPSILON15) {
+                if (Math.abs(determinant) <= CesiumMath.EPSILON15) {
             throw new DeveloperError('matrix is not invertible');
         }
-
+        
         result[0] = m22 * m33 - m23 * m32;
         result[1] = m23 * m31 - m21 * m33;
         result[2] = m21 * m32 - m22 * m31;
@@ -5429,6 +5693,11 @@ define('Core/Cartesian4',[
         result.y = cartesian.y / magnitude;
         result.z = cartesian.z / magnitude;
         result.w = cartesian.w / magnitude;
+
+                if (isNaN(result.x) || isNaN(result.y) || isNaN(result.z) || isNaN(result.w)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        
         return result;
     };
 
@@ -9403,7 +9672,11 @@ define('Core/Rectangle',[
     };
 
     /**
-     * Computes the intersection of two rectangles
+     * Computes the intersection of two rectangles.  This function assumes that the rectangle's coordinates are
+     * latitude and longitude in radians and produces a correct intersection, taking into account the fact that
+     * the same angle can be represented with multiple values as well as the wrapping of longitude at the
+     * anti-meridian.  For a simple intersection that ignores these factors and can be used with projected
+     * coordinates, see {@link Rectangle.simpleIntersection}.
      *
      * @param {Rectangle} rectangle On rectangle to find an intersection
      * @param {Rectangle} otherRectangle Another rectangle to find an intersection
@@ -9453,6 +9726,45 @@ define('Core/Rectangle',[
         if (!defined(result)) {
             return new Rectangle(west, south, east, north);
         }
+        result.west = west;
+        result.south = south;
+        result.east = east;
+        result.north = north;
+        return result;
+    };
+
+    /**
+     * Computes a simple intersection of two rectangles.  Unlike {@link Rectangle.intersection}, this function
+     * does not attempt to put the angular coordinates into a consistent range or to account for crossing the
+     * anti-meridian.  As such, it can be used for rectangles where the coordinates are not simply latitude
+     * and longitude (i.e. projected coordinates).
+     *
+     * @param {Rectangle} rectangle On rectangle to find an intersection
+     * @param {Rectangle} otherRectangle Another rectangle to find an intersection
+     * @param {Rectangle} [result] The object onto which to store the result.
+     * @returns {Rectangle|undefined} The modified result parameter, a new Rectangle instance if none was provided or undefined if there is no intersection.
+     */
+    Rectangle.simpleIntersection = function(rectangle, otherRectangle, result) {
+                if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
+        }
+        if (!defined(otherRectangle)) {
+            throw new DeveloperError('otherRectangle is required.');
+        }
+        
+        var west = Math.max(rectangle.west, otherRectangle.west);
+        var south = Math.max(rectangle.south, otherRectangle.south);
+        var east = Math.min(rectangle.east, otherRectangle.east);
+        var north = Math.min(rectangle.north, otherRectangle.north);
+
+        if (south >= north || west >= east) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            return new Rectangle(west, south, east, north);
+        }
+
         result.west = west;
         result.south = south;
         result.east = east;
@@ -14425,9 +14737,9 @@ define('Core/ComponentDatatype',[
             return Float32Array.BYTES_PER_ELEMENT;
         case ComponentDatatype.DOUBLE:
             return Float64Array.BYTES_PER_ELEMENT;
-        default:
+                default:
             throw new DeveloperError('componentDatatype is not a valid value.');
-        }
+                }
     };
 
     /**
@@ -14524,9 +14836,9 @@ define('Core/ComponentDatatype',[
             return new Float32Array(valuesOrLength);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(valuesOrLength);
-        default:
+                default:
             throw new DeveloperError('componentDatatype is not a valid value.');
-        }
+                }
     };
 
     /**
@@ -14568,9 +14880,9 @@ define('Core/ComponentDatatype',[
             return new Float32Array(buffer, byteOffset, length);
         case ComponentDatatype.DOUBLE:
             return new Float64Array(buffer, byteOffset, length);
-        default:
+                default:
             throw new DeveloperError('componentDatatype is not a valid value.');
-        }
+                }
     };
 
     /**
@@ -14599,9 +14911,9 @@ define('Core/ComponentDatatype',[
                 return ComponentDatatype.FLOAT;
             case 'DOUBLE':
                 return ComponentDatatype.DOUBLE;
-            default:
+                        default:
                 throw new DeveloperError('name is not a valid value.');
-        }
+                    }
     };
 
     return freezeObject(ComponentDatatype);
@@ -14877,7 +15189,7 @@ define('Core/Geometry',[
         /**
          * @private
          */
-        this.boundingSphereCV = undefined;
+        this.boundingSphereCV = options.boundingSphereCV;
     }
 
     /**
@@ -14903,10 +15215,10 @@ define('Core/Geometry',[
 
                 var attribute = geometry.attributes[property];
                 var num = attribute.values.length / attribute.componentsPerAttribute;
-                if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
+                                if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
                     throw new DeveloperError('All attribute lists must have the same number of attributes.');
                 }
-                numberOfVertices = num;
+                                numberOfVertices = num;
             }
         }
 
@@ -15545,6 +15857,11 @@ define('Core/Cartesian2',[
 
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
+
+                if (isNaN(result.x) || isNaN(result.y)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        
         return result;
     };
 
@@ -15994,9 +16311,9 @@ define('Core/AttributeCompression',[
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
      * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
-     * 
+     *
      * @exception {DeveloperError} vector must be normalized.
-     * 
+     *
      * @see AttributeCompression.octEncodeInRange
      * @see AttributeCompression.octDecode
      */
@@ -16041,14 +16358,14 @@ define('Core/AttributeCompression',[
 
     /**
      * Decodes a unit-length vector in 2 byte 'oct' encoding to a normalized 3-component vector.
-     * 
+     *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
      * @param {Cartesian3} result The decoded and normalized vector.
      * @returns {Cartesian3} The decoded and normalized vector.
-     * 
+     *
      * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and 255.
-     * 
+     *
      * @see AttributeCompression.octDecodeInRange
      */
     AttributeCompression.octDecode = function(x, y, result) {
@@ -16177,7 +16494,7 @@ define('Core/AttributeCompression',[
     /**
      * Pack texture coordinates into a single float. The texture coordinates will only preserve 12 bits of precision.
      *
-     * @param {Cartesian2} textureCoordinates The texture coordinates to compress
+     * @param {Cartesian2} textureCoordinates The texture coordinates to compress.  Both coordinates must be in the range 0.0-1.0.
      * @returns {Number} The packed texture coordinates.
      *
      */
@@ -16186,8 +16503,9 @@ define('Core/AttributeCompression',[
             throw new DeveloperError('textureCoordinates is required.');
         }
         
-        var x = textureCoordinates.x === 1.0 ? 4095.0 : (textureCoordinates.x * 4096.0) | 0;
-        var y = textureCoordinates.y === 1.0 ? 4095.0 : (textureCoordinates.y * 4096.0) | 0;
+        // Move x and y to the range 0-4095;
+        var x = (textureCoordinates.x * 4095.0) | 0;
+        var y = (textureCoordinates.y * 4095.0) | 0;
         return 4096.0 * x + y;
     };
 
@@ -16208,8 +16526,9 @@ define('Core/AttributeCompression',[
         }
         
         var temp = compressed / 4096.0;
-        result.x = Math.floor(temp) / 4096.0;
-        result.y = temp - Math.floor(temp);
+        var xZeroTo4095 = Math.floor(temp);
+        result.x = xZeroTo4095 / 4095.0;
+        result.y = (compressed - xZeroTo4095 * 4096) / 4095;
         return result;
     };
 
@@ -16892,6 +17211,7 @@ define('Core/QuadraticRealPolynomial',[
 
     return QuadraticRealPolynomial;
 });
+
 /*global define*/
 define('Core/CubicRealPolynomial',[
         './DeveloperError',
@@ -17128,6 +17448,7 @@ define('Core/CubicRealPolynomial',[
 
     return CubicRealPolynomial;
 });
+
 /*global define*/
 define('Core/QuarticRealPolynomial',[
         './CubicRealPolynomial',
@@ -17452,6 +17773,7 @@ define('Core/QuarticRealPolynomial',[
 
     return QuarticRealPolynomial;
 });
+
 /*global define*/
 define('Core/Ray',[
         './Cartesian3',
@@ -17741,6 +18063,15 @@ define('Core/IntersectionTests',[
         }
         if (!defined(v1)) {
             throw new DeveloperError('v1 is required.');
+        }
+        if (!defined(p0)) {
+            throw new DeveloperError('p0 is required.');
+        }
+        if (!defined(p1)) {
+            throw new DeveloperError('p1 is required.');
+        }
+        if (!defined(p2)) {
+            throw new DeveloperError('p2 is required.');
         }
         
         var ray = scratchLineSegmentTriangleRay;
@@ -18119,9 +18450,11 @@ define('Core/IntersectionTests',[
         var position = ray.origin;
         var direction = ray.direction;
 
-        var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
-        if (Cartesian3.dot(direction, normal) >= 0.0) { // The location provided is the closest point in altitude
-            return position;
+        if (!Cartesian3.equals(position, Cartesian3.ZERO)) {
+            var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
+            if (Cartesian3.dot(direction, normal) >= 0.0) { // The location provided is the closest point in altitude
+                return position;
+            }
         }
 
         var intersects = defined(this.rayEllipsoid(ray, ellipsoid));
@@ -18863,9 +19196,9 @@ define('Core/GeometryPipeline',[
                 case PrimitiveType.TRIANGLE_FAN:
                     geometry.indices = triangleFanToLines(indices);
                     break;
-                default:
+                                default:
                     throw new DeveloperError('geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.');
-            }
+                            }
 
             geometry.primitiveType = PrimitiveType.LINES;
         }
@@ -19326,10 +19659,10 @@ define('Core/GeometryPipeline',[
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
 
             var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
-            if (!defined(lonLat)) {
+                        if (!defined(lonLat)) {
                 throw new DeveloperError('Could not project point (' + value.x + ', ' + value.y + ', ' + value.z + ') to 2D.');
             }
-
+            
             var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 
             projectedValues[index++] = projectedLonLat.x;
@@ -19716,7 +20049,7 @@ define('Core/GeometryPipeline',[
             var instance = instances[i];
             if (defined(instance.geometry)) {
                 instanceGeometry.push(instance);
-            } else {
+            } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                 instanceSplitGeometry.push(instance);
             }
         }
@@ -21370,7 +21703,9 @@ define('Scene/PrimitivePipeline',[
 
         if (toWorld) {
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.transformToWorldCoordinates(instances[i]);
+                if (defined(instances[i].geometry)) {
+                    GeometryPipeline.transformToWorldCoordinates(instances[i]);
+                }
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
@@ -21378,141 +21713,60 @@ define('Scene/PrimitivePipeline',[
         }
     }
 
-    function addGeometryPickColor(geometry, pickColor) {
+    function addGeometryBatchId(geometry, batchId) {
         var attributes = geometry.attributes;
         var positionAttr = attributes.position;
-        var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
+        var numberOfComponents = positionAttr.values.length / positionAttr.componentsPerAttribute;
 
-        attributes.pickColor = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 4,
-            normalize : true,
-            values : new Uint8Array(numberOfComponents)
+        attributes.batchId = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 1,
+            values : new Float32Array(numberOfComponents)
         });
 
-        var red = Color.floatToByte(pickColor.red);
-        var green = Color.floatToByte(pickColor.green);
-        var blue = Color.floatToByte(pickColor.blue);
-        var alpha = Color.floatToByte(pickColor.alpha);
-        var values = attributes.pickColor.values;
-
-        for (var j = 0; j < numberOfComponents; j += 4) {
-            values[j] = red;
-            values[j + 1] = green;
-            values[j + 2] = blue;
-            values[j + 3] = alpha;
+        var values = attributes.batchId.values;
+        for (var j = 0; j < numberOfComponents; ++j) {
+            values[j] = batchId;
         }
     }
 
-    function addPickColorAttribute(instances, pickIds) {
+    function addBatchIds(instances) {
         var length = instances.length;
 
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
-            var pickColor = pickIds[i];
-
             if (defined(instance.geometry)) {
-                addGeometryPickColor(instance.geometry, pickColor);
-            } else {
-                addGeometryPickColor(instance.westHemisphereGeometry, pickColor);
-                addGeometryPickColor(instance.eastHemisphereGeometry, pickColor);
-            }
-        }
-    }
-
-    function getCommonPerInstanceAttributeNames(instances) {
-        var length = instances.length;
-
-        var attributesInAllInstances = [];
-        var attributes0 = instances[0].attributes;
-        var name;
-
-        for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
-                var attribute = attributes0[name];
-                var inAllInstances = true;
-
-                // Does this same attribute exist in all instances?
-                for (var i = 1; i < length; ++i) {
-                    var otherAttribute = instances[i].attributes[name];
-
-                    if (!defined(otherAttribute) ||
-                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
-                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
-                        (attribute.normalize !== otherAttribute.normalize)) {
-
-                        inAllInstances = false;
-                        break;
-                    }
-                }
-
-                if (inAllInstances) {
-                    attributesInAllInstances.push(name);
-                }
-            }
-        }
-
-        return attributesInAllInstances;
-    }
-
-    function addPerInstanceAttributesToGeometry(instanceAttributes, geometry, names) {
-        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-
-        var namesLength = names.length;
-        for (var j = 0; j < namesLength; ++j) {
-            var name = names[j];
-            var attribute = instanceAttributes[name];
-            var componentDatatype = attribute.componentDatatype;
-            var value = attribute.value;
-            var componentsPerAttribute = attribute.componentsPerAttribute;
-
-            var buffer = ComponentDatatype.createTypedArray(componentDatatype, numberOfVertices * componentsPerAttribute);
-            for (var k = 0; k < numberOfVertices; ++k) {
-                buffer.set(value, k * componentsPerAttribute);
-            }
-
-            geometry.attributes[name] = new GeometryAttribute({
-                componentDatatype : componentDatatype,
-                componentsPerAttribute : componentsPerAttribute,
-                normalize : attribute.normalize,
-                values : buffer
-            });
-        }
-    }
-
-    function addPerInstanceAttributes(instances, names) {
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var instanceAttributes = instance.attributes;
-
-            if (defined(instance.geometry)) {
-                addPerInstanceAttributesToGeometry(instanceAttributes, instance.geometry, names);
-            } else {
-                addPerInstanceAttributesToGeometry(instanceAttributes, instance.westHemisphereGeometry, names);
-                addPerInstanceAttributesToGeometry(instanceAttributes, instance.eastHemisphereGeometry, names);
+                addGeometryBatchId(instance.geometry, i);
+            } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
+                addGeometryBatchId(instance.westHemisphereGeometry, i);
+                addGeometryBatchId(instance.eastHemisphereGeometry, i);
             }
         }
     }
 
     function geometryPipeline(parameters) {
         var instances = parameters.instances;
-        var pickIds = parameters.pickIds;
         var projection = parameters.projection;
         var uintIndexSupport = parameters.elementIndexUintSupported;
         var scene3DOnly = parameters.scene3DOnly;
-        var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
         var compressVertices = parameters.compressVertices;
         var modelMatrix = parameters.modelMatrix;
 
         var i;
         var geometry;
+        var primitiveType;
         var length = instances.length;
-        var primitiveType = instances[0].geometry.primitiveType;
+
+        for (i = 0 ; i < length; ++i) {
+            if (defined(instances[i].geometry)) {
+                primitiveType = instances[i].geometry.primitiveType;
+                break;
+            }
+        }
 
                 for (i = 1; i < length; ++i) {
-            if (instances[i].geometry.primitiveType !== primitiveType) {
+            if (defined(instances[i].geometry) && instances[i].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
@@ -21523,18 +21777,13 @@ define('Scene/PrimitivePipeline',[
         // Clip to IDL
         if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.splitLongitude(instances[i]);
+                if (defined(instances[i].geometry)) {
+                    GeometryPipeline.splitLongitude(instances[i]);
+                }
             }
         }
 
-        // Add pickColor attribute for picking individual instances
-        if (allowPicking) {
-            addPickColorAttribute(instances, pickIds);
-        }
-
-        // add attributes to the geometry for each per-instance attribute
-        var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
-        addPerInstanceAttributes(instances, perInstanceAttributeNames);
+        addBatchIds(instances);
 
         // Optimize for vertex shader caches
         if (vertexCacheOptimize) {
@@ -21543,7 +21792,7 @@ define('Scene/PrimitivePipeline',[
                 if (defined(instance.geometry)) {
                     GeometryPipeline.reorderForPostVertexCache(instance.geometry);
                     GeometryPipeline.reorderForPreVertexCache(instance.geometry);
-                } else {
+                } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                     GeometryPipeline.reorderForPostVertexCache(instance.westHemisphereGeometry);
                     GeometryPipeline.reorderForPreVertexCache(instance.westHemisphereGeometry);
 
@@ -21608,159 +21857,6 @@ define('Scene/PrimitivePipeline',[
         return geometries;
     }
 
-    function createPerInstanceVAAttributes(geometry, attributeLocations, names) {
-        var vaAttributes = [];
-        var attributes = geometry.attributes;
-
-        var length = names.length;
-        for (var i = 0; i < length; ++i) {
-            var name = names[i];
-            var attribute = attributes[name];
-
-            var componentDatatype = attribute.componentDatatype;
-            if (componentDatatype === ComponentDatatype.DOUBLE) {
-                componentDatatype = ComponentDatatype.FLOAT;
-            }
-
-            var typedArray = ComponentDatatype.createTypedArray(componentDatatype, attribute.values);
-            vaAttributes.push({
-                index : attributeLocations[name],
-                componentDatatype : componentDatatype,
-                componentsPerAttribute : attribute.componentsPerAttribute,
-                normalize : attribute.normalize,
-                values : typedArray
-            });
-
-            delete attributes[name];
-        }
-
-        return vaAttributes;
-    }
-
-    function computePerInstanceAttributeLocationsForGeometry(instanceIndex, geometry, instanceAttributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices) {
-        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-
-        if (!defined(indices[instanceIndex])) {
-            indices[instanceIndex] = {
-                boundingSphere : geometry.boundingSphere,
-                boundingSphereCV : geometry.boundingSphereCV
-            };
-        }
-
-        var namesLength = names.length;
-        for (var j = 0; j < namesLength; ++j) {
-            var name = names[j];
-            var index = attributeLocations[name];
-
-            var tempVertexCount = numberOfVertices;
-            while (tempVertexCount > 0) {
-                var vaIndex = defaultValue(vaIndices[name], 0);
-                var va = vertexArrays[vaIndex];
-                var vaLength = va.length;
-
-                var attribute;
-                for (var k = 0; k < vaLength; ++k) {
-                    attribute = va[k];
-                    if (attribute.index === index) {
-                        break;
-                    }
-                }
-
-                if (!defined(indices[instanceIndex][name])) {
-                    indices[instanceIndex][name] = {
-                        dirty : false,
-                        valid : true,
-                        value : instanceAttributes[name].value,
-                        indices : []
-                    };
-                }
-
-                var size = attribute.values.length / attribute.componentsPerAttribute;
-                var offset = defaultValue(offsets[name], 0);
-
-                var count;
-                if (offset + tempVertexCount < size) {
-                    count = tempVertexCount;
-                    indices[instanceIndex][name].indices.push({
-                        attribute : attribute,
-                        offset : offset,
-                        count : count
-                    });
-                    offsets[name] = offset + tempVertexCount;
-                } else {
-                    count = size - offset;
-                    indices[instanceIndex][name].indices.push({
-                        attribute : attribute,
-                        offset : offset,
-                        count : count
-                    });
-                    offsets[name] = 0;
-                    vaIndices[name] = vaIndex + 1;
-                }
-
-                tempVertexCount -= count;
-            }
-        }
-    }
-
-    function computePerInstanceAttributeLocations(instances, invalidInstances, vertexArrays, attributeLocations, names) {
-        var indices = [];
-
-        var length = instances.length;
-        var offsets = {};
-        var vaIndices = {};
-
-        var i;
-        var instance;
-        var attributes;
-
-        for (i = 0; i < length; ++i) {
-            instance = instances[i];
-            attributes = instance.attributes;
-            if (defined(instance.geometry)) {
-                computePerInstanceAttributeLocationsForGeometry(i, instance.geometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
-            }
-        }
-
-        for (i = 0; i < length; ++i) {
-            instance = instances[i];
-            attributes = instance.attributes;
-            if (defined(instance.westHemisphereGeometry)) {
-                computePerInstanceAttributeLocationsForGeometry(i, instance.westHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
-            }
-        }
-
-        for (i = 0; i < length; ++i) {
-            instance = instances[i];
-            attributes = instance.attributes;
-            if (defined(instance.eastHemisphereGeometry)) {
-                computePerInstanceAttributeLocationsForGeometry(i, instance.eastHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
-            }
-        }
-
-        length = invalidInstances.length;
-        for (i = 0; i < length; ++i) {
-            instance = invalidInstances[i];
-            attributes = instance.attributes;
-
-            var instanceAttributes = {};
-            indices.push(instanceAttributes);
-
-            var namesLength = names.length;
-            for (var j = 0; j < namesLength; ++j) {
-                var name = names[j];
-                instanceAttributes[name] = {
-                    dirty : false,
-                    valid : false,
-                    value : attributes[name].value,
-                    indices : []
-                };
-            }
-        }
-
-        return indices;
-    }
-
     function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
         var offset;
         var indexCount;
@@ -21821,44 +21917,50 @@ define('Scene/PrimitivePipeline',[
     PrimitivePipeline.combineGeometry = function(parameters) {
         var geometries;
         var attributeLocations;
-        var perInstanceAttributes;
-        var perInstanceAttributeNames;
-        var length;
-
         var instances = parameters.instances;
-        var invalidInstances = parameters.invalidInstances;
+        var length = instances.length;
 
-        if (instances.length > 0) {
+        if (length > 0) {
             geometries = geometryPipeline(parameters);
-            attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
-
-            perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
-
-            perInstanceAttributes = [];
-            length = geometries.length;
-            for (var i = 0; i < length; ++i) {
-                var geometry = geometries[i];
-                perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
+            if (geometries.length > 0) {
+                attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
             }
         }
 
-        perInstanceAttributeNames = defined(perInstanceAttributeNames) ? perInstanceAttributeNames : getCommonPerInstanceAttributeNames(invalidInstances);
-        var indices = computePerInstanceAttributeLocations(instances, invalidInstances, perInstanceAttributes, attributeLocations, perInstanceAttributeNames);
-
         var pickOffsets;
-        if (parameters.createPickOffsets && defined(geometries)) {
+        if (parameters.createPickOffsets && geometries.length > 0) {
             pickOffsets = createInstancePickOffsets(instances, geometries);
+        }
+
+        var boundingSpheres = new Array(length);
+        var boundingSpheresCV = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var geometry = instance.geometry;
+            if (defined(geometry)) {
+                boundingSpheres[i] = geometry.boundingSphere;
+                boundingSpheresCV[i] = geometry.boundingSphereCV;
+            }
+
+            var eastHemisphereGeometry = instance.eastHemisphereGeometry;
+            var westHemisphereGeometry = instance.westHemisphereGeometry;
+            if (defined(eastHemisphereGeometry) && defined(westHemisphereGeometry)) {
+                if (defined(eastHemisphereGeometry.boundingSphere) && defined(westHemisphereGeometry.boundingSphere)) {
+                    boundingSpheres[i] = BoundingSphere.union(eastHemisphereGeometry.boundingSphere, westHemisphereGeometry.boundingSphere);
+                }
+                if (defined(eastHemisphereGeometry.boundingSphereCV) && defined(westHemisphereGeometry.boundingSphereCV)) {
+                    boundingSpheresCV[i] = BoundingSphere.union(eastHemisphereGeometry.boundingSphereCV, westHemisphereGeometry.boundingSphereCV);
+                }
+            }
         }
 
         return {
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
-            vaAttributes : perInstanceAttributes,
-            vaAttributeLocations : indices,
-            validInstancesIndices : parameters.validInstancesIndices,
-            invalidInstancesIndices : parameters.invalidInstancesIndices,
-            pickOffsets : pickOffsets
+            pickOffsets : pickOffsets,
+            boundingSpheres : boundingSpheres,
+            boundingSpheresCV : boundingSpheresCV
         };
     };
 
@@ -21883,20 +21985,6 @@ define('Scene/PrimitivePipeline',[
         var length = geometries.length;
         for (var i = 0; i < length; ++i) {
             transferGeometry(geometries[i], transferableObjects);
-        }
-    }
-
-    /**
-     * @private
-     */
-    function transferPerInstanceAttributes(perInstanceAttributes, transferableObjects) {
-        var length = perInstanceAttributes.length;
-        for (var i = 0; i < length; ++i) {
-            var vaAttributes = perInstanceAttributes[i];
-            var vaLength = vaAttributes.length;
-            for (var j = 0; j < vaLength; ++j) {
-                transferableObjects.push(vaAttributes[j].values.buffer);
-            }
         }
     }
 
@@ -22088,6 +22176,7 @@ define('Scene/PrimitivePipeline',[
                 primitiveType : primitiveType,
                 geometryType : geometryType,
                 boundingSphere : boundingSphere,
+                boundingSphereCV : boundingSphereCV,
                 indices : indices,
                 attributes : attributes
             });
@@ -22096,47 +22185,9 @@ define('Scene/PrimitivePipeline',[
         return result;
     };
 
-    function packPickIds(pickIds, transferableObjects) {
-        var length = pickIds.length;
-        var packedPickIds = new Uint32Array(pickIds.length);
-        for (var i = 0; i < length; ++i) {
-            packedPickIds[i] = pickIds[i].toRgba();
-        }
-        transferableObjects.push(packedPickIds.buffer);
-        return packedPickIds;
-    }
-
-    function unpackPickIds(packedPickIds) {
-        var length = packedPickIds.length;
-        var pickIds = new Array(length);
-        for (var i = 0; i < length; i++) {
-            pickIds[i] = Color.fromRgba(packedPickIds[i]);
-        }
-        return pickIds;
-    }
-
-    // This function was created by simplifying packInstancesForCombine into a count-only operation.
-    function countInstancesForCombine(instances) {
-        var length = instances.length;
-        var count = 1 + (length * 17);
-        for (var i = 0; i < length; i++) {
-            var attributes = instances[i].attributes;
-            for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
-                    var attribute = attributes[property];
-                    count += 5 + attribute.value.length;
-                }
-            }
-        }
-        return count;
-    }
-
     function packInstancesForCombine(instances, transferableObjects) {
-        var packedData = new Float64Array(countInstancesForCombine(instances));
-        var stringHash = {};
-        var stringTable = [];
-
         var length = instances.length;
+        var packedData = new Float64Array(1 + (length * 16));
         var count = 0;
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
@@ -22144,43 +22195,14 @@ define('Scene/PrimitivePipeline',[
 
             Matrix4.pack(instance.modelMatrix, packedData, count);
             count += Matrix4.packedLength;
-
-            var attributes = instance.attributes;
-            var attributesToWrite = [];
-            for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
-                    attributesToWrite.push(property);
-                    if (!defined(stringHash[property])) {
-                        stringHash[property] = stringTable.length;
-                        stringTable.push(property);
-                    }
-                }
-            }
-
-            packedData[count++] = attributesToWrite.length;
-            for (var q = 0; q < attributesToWrite.length; q++) {
-                var name = attributesToWrite[q];
-                var attribute = attributes[name];
-                packedData[count++] = stringHash[name];
-                packedData[count++] = attribute.componentDatatype;
-                packedData[count++] = attribute.componentsPerAttribute;
-                packedData[count++] = attribute.normalize;
-                packedData[count++] = attribute.value.length;
-                packedData.set(attribute.value, count);
-                count += attribute.value.length;
-            }
         }
         transferableObjects.push(packedData.buffer);
 
-        return {
-            stringTable : stringTable,
-            packedData : packedData
-        };
+        return packedData;
     }
 
     function unpackInstancesForCombine(data) {
-        var packedInstances = data.packedData;
-        var stringTable = data.stringTable;
+        var packedInstances = data;
         var result = new Array(packedInstances[0]);
         var count = 0;
 
@@ -22189,191 +22211,12 @@ define('Scene/PrimitivePipeline',[
             var modelMatrix = Matrix4.unpack(packedInstances, i);
             i += Matrix4.packedLength;
 
-            var attributes = {};
-            var numAttributes = packedInstances[i++];
-            for (var x = 0; x < numAttributes; x++) {
-                var name = stringTable[packedInstances[i++]];
-                var componentDatatype = packedInstances[i++];
-                var componentsPerAttribute = packedInstances[i++];
-                var normalize = packedInstances[i++] !== 0;
-                var length = packedInstances[i++];
-                var value = ComponentDatatype.createTypedArray(componentDatatype, length);
-                for (var valueIndex = 0; valueIndex < length; valueIndex++) {
-                    value[valueIndex] = packedInstances[i++];
-                }
-
-                attributes[name] = {
-                    componentDatatype : componentDatatype,
-                    componentsPerAttribute : componentsPerAttribute,
-                    normalize : normalize,
-                    value : value
-                };
-            }
-
             result[count++] = {
-                attributes : attributes,
                 modelMatrix : modelMatrix
             };
         }
 
         return result;
-    }
-
-    // This function was created by simplifying packAttributeLocations into a count-only operation.
-    function countAttributeLocations(attributeLocations) {
-        var length = attributeLocations.length;
-        var count = 1 + length;
-        for (var i = 0; i < length; i++) {
-            var instance = attributeLocations[i];
-
-            count += 2;
-            count += defined(instance.boundingSphere) ? BoundingSphere.packedLength : 0.0;
-            count += defined(instance.boundingSphereCV) ? BoundingSphere.packedLength : 0.0;
-
-            for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
-                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
-                    var property = instance[propertyName];
-                    count += 4 + (property.indices.length * 3) + property.value.length;
-                }
-            }
-        }
-        return count;
-    }
-
-    function packAttributeLocations(attributeLocations, transferableObjects) {
-        var packedData = new Float64Array(countAttributeLocations(attributeLocations));
-        var stringTable = [];
-        var attributeTable = [];
-
-        var stringHash = {};
-        var length = attributeLocations.length;
-        var count = 0;
-        packedData[count++] = length;
-        for (var i = 0; i < length; i++) {
-            var instance = attributeLocations[i];
-
-            var boundingSphere = instance.boundingSphere;
-            var hasBoundingSphere = defined(boundingSphere);
-            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
-            if (hasBoundingSphere) {
-                BoundingSphere.pack(boundingSphere, packedData, count);
-                count += BoundingSphere.packedLength;
-            }
-
-            boundingSphere = instance.boundingSphereCV;
-            hasBoundingSphere = defined(boundingSphere);
-            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
-            if (hasBoundingSphere) {
-                BoundingSphere.pack(boundingSphere, packedData, count);
-                count += BoundingSphere.packedLength;
-            }
-
-            var propertiesToWrite = [];
-            for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
-                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
-                    propertiesToWrite.push(propertyName);
-                    if (!defined(stringHash[propertyName])) {
-                        stringHash[propertyName] = stringTable.length;
-                        stringTable.push(propertyName);
-                    }
-                }
-            }
-
-            packedData[count++] = propertiesToWrite.length;
-            for (var q = 0; q < propertiesToWrite.length; q++) {
-                var name = propertiesToWrite[q];
-                var property = instance[name];
-                packedData[count++] = stringHash[name];
-                packedData[count++] = property.valid ? 1.0 : 0.0;
-
-                var indices = property.indices;
-                var indicesLength = indices.length;
-                packedData[count++] = indicesLength;
-                for (var x = 0; x < indicesLength; x++) {
-                    var index = indices[x];
-                    packedData[count++] = index.count;
-                    packedData[count++] = index.offset;
-                    var tableIndex = attributeTable.indexOf(index.attribute);
-                    if (tableIndex === -1) {
-                        tableIndex = attributeTable.length;
-                        attributeTable.push(index.attribute);
-                    }
-                    packedData[count++] = tableIndex;
-                }
-
-                packedData[count++] = property.value.length;
-                packedData.set(property.value, count);
-                count += property.value.length;
-            }
-        }
-
-        transferableObjects.push(packedData.buffer);
-
-        return {
-            stringTable : stringTable,
-            packedData : packedData,
-            attributeTable : attributeTable
-        };
-    }
-
-    function unpackAttributeLocations(packedAttributeLocations, vaAttributes) {
-        var stringTable = packedAttributeLocations.stringTable;
-        var attributeTable = packedAttributeLocations.attributeTable;
-        var packedData = packedAttributeLocations.packedData;
-
-        var attributeLocations = new Array(packedData[0]);
-        var attributeLocationsIndex = 0;
-        var i = 1;
-        var packedDataLength = packedData.length;
-        while (i < packedDataLength) {
-            var instance = {};
-
-            var hasBoundingSphere = packedData[i++] === 1.0;
-            if (hasBoundingSphere) {
-                instance.boundingSphere = BoundingSphere.unpack(packedData, i);
-                i += BoundingSphere.packedLength;
-            }
-
-            hasBoundingSphere = packedData[i++] === 1.0;
-            if (hasBoundingSphere) {
-                instance.boundingSphereCV = BoundingSphere.unpack(packedData, i);
-                i += BoundingSphere.packedLength;
-            }
-
-            var numAttributes = packedData[i++];
-            for (var x = 0; x < numAttributes; x++) {
-                var name = stringTable[packedData[i++]];
-                var valid = packedData[i++] === 1.0;
-
-                var indicesLength = packedData[i++];
-                var indices = indicesLength > 0 ? new Array(indicesLength) : undefined;
-                for (var indicesIndex = 0; indicesIndex < indicesLength; indicesIndex++) {
-                    var index = {};
-                    index.count = packedData[i++];
-                    index.offset = packedData[i++];
-                    index.attribute = attributeTable[packedData[i++]];
-                    indices[indicesIndex] = index;
-                }
-
-                var valueLength = packedData[i++];
-                var value = valid ? ComponentDatatype.createTypedArray(indices[0].attribute.componentDatatype, valueLength) : new Array(valueLength);
-                for (var valueIndex = 0; valueIndex < valueLength; valueIndex++) {
-                    value[valueIndex] = packedData[i++];
-                }
-
-                instance[name] = {
-                    dirty : false,
-                    valid : valid,
-                    indices : indices,
-                    value : value
-                };
-            }
-            attributeLocations[attributeLocationsIndex++] = instance;
-        }
-
-        return attributeLocations;
     }
 
     /**
@@ -22387,20 +22230,13 @@ define('Scene/PrimitivePipeline',[
             transferableObjects.push(createGeometryResults[i].packedData.buffer);
         }
 
-        var packedPickIds;
-        if (parameters.allowPicking) {
-            packedPickIds = packPickIds(parameters.pickIds, transferableObjects);
-        }
-
         return {
             createGeometryResults : parameters.createGeometryResults,
             packedInstances : packInstancesForCombine(parameters.instances, transferableObjects),
-            packedPickIds : packedPickIds,
             ellipsoid : parameters.ellipsoid,
             isGeographic : parameters.projection instanceof GeographicProjection,
             elementIndexUintSupported : parameters.elementIndexUintSupported,
             scene3DOnly : parameters.scene3DOnly,
-            allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
             compressVertices : parameters.compressVertices,
             modelMatrix : parameters.modelMatrix,
@@ -22413,17 +22249,9 @@ define('Scene/PrimitivePipeline',[
      */
     PrimitivePipeline.unpackCombineGeometryParameters = function(packedParameters) {
         var instances = unpackInstancesForCombine(packedParameters.packedInstances);
-        var allowPicking = packedParameters.allowPicking;
-        var pickIds = allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
-
-        var validInstances = [];
-        var invalidInstances = [];
-        var validInstancesIndices = [];
-        var invalidInstancesIndices = [];
-        var validPickIds = [];
 
         for (var resultIndex = 0; resultIndex < length; resultIndex++) {
             var geometries = PrimitivePipeline.unpackCreateGeometryResults(createGeometryResults[resultIndex]);
@@ -22431,19 +22259,7 @@ define('Scene/PrimitivePipeline',[
             for (var geometryIndex = 0; geometryIndex < geometriesLength; geometryIndex++) {
                 var geometry = geometries[geometryIndex];
                 var instance = instances[instanceIndex];
-
-                if (defined(geometry)) {
-                    instance.geometry = geometry;
-                    validInstances.push(instance);
-                    validInstancesIndices.push(instanceIndex);
-                    if (allowPicking) {
-                        validPickIds.push(pickIds[instanceIndex]);
-                    }
-                } else {
-                    invalidInstances.push(instance);
-                    invalidInstancesIndices.push(instanceIndex);
-                }
-
+                instance.geometry = geometry;
                 ++instanceIndex;
             }
         }
@@ -22452,16 +22268,11 @@ define('Scene/PrimitivePipeline',[
         var projection = packedParameters.isGeographic ? new GeographicProjection(ellipsoid) : new WebMercatorProjection(ellipsoid);
 
         return {
-            instances : validInstances,
-            invalidInstances : invalidInstances,
-            validInstancesIndices : validInstancesIndices,
-            invalidInstancesIndices : invalidInstancesIndices,
-            pickIds : validPickIds,
+            instances : instances,
             ellipsoid : ellipsoid,
             projection : projection,
             elementIndexUintSupported : packedParameters.elementIndexUintSupported,
             scene3DOnly : packedParameters.scene3DOnly,
-            allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
             compressVertices : packedParameters.compressVertices,
             modelMatrix : Matrix4.clone(packedParameters.modelMatrix),
@@ -22469,24 +22280,63 @@ define('Scene/PrimitivePipeline',[
         };
     };
 
+    function packBoundingSpheres(boundingSpheres) {
+        var length = boundingSpheres.length;
+        var bufferLength = 1 + (BoundingSphere.packedLength + 1) * length;
+        var buffer = new Float32Array(bufferLength);
+
+        var bufferIndex = 0;
+        buffer[bufferIndex++] = length;
+
+        for (var i = 0; i < length; ++i) {
+            var bs = boundingSpheres[i];
+            if (!defined(bs)) {
+                buffer[bufferIndex++] = 0.0;
+            } else {
+                buffer[bufferIndex++] = 1.0;
+                BoundingSphere.pack(boundingSpheres[i], buffer, bufferIndex);
+            }
+            bufferIndex += BoundingSphere.packedLength;
+        }
+
+        return buffer;
+    }
+
+    function unpackBoundingSpheres(buffer) {
+        var result = new Array(buffer[0]);
+        var count = 0;
+
+        var i = 1;
+        while (i < buffer.length) {
+            if (buffer[i++] === 1.0) {
+                result[count] = BoundingSphere.unpack(buffer, i);
+            }
+            ++count;
+            i += BoundingSphere.packedLength;
+        }
+
+        return result;
+    }
+
     /**
      * @private
      */
     PrimitivePipeline.packCombineGeometryResults = function(results, transferableObjects) {
         if (defined(results.geometries)) {
             transferGeometries(results.geometries, transferableObjects);
-            transferPerInstanceAttributes(results.vaAttributes, transferableObjects);
         }
+
+        var packedBoundingSpheres = packBoundingSpheres(results.boundingSpheres);
+        var packedBoundingSpheresCV = packBoundingSpheres(results.boundingSpheresCV);
+        transferableObjects.push(packedBoundingSpheres.buffer, packedBoundingSpheresCV.buffer);
 
         return {
             geometries : results.geometries,
             attributeLocations : results.attributeLocations,
-            vaAttributes : results.vaAttributes,
-            packedVaAttributeLocations : packAttributeLocations(results.vaAttributeLocations, transferableObjects),
             modelMatrix : results.modelMatrix,
-            validInstancesIndices : results.validInstancesIndices,
-            invalidInstancesIndices : results.invalidInstancesIndices,
-            pickOffsets : results.pickOffsets
+            pickOffsets : results.pickOffsets,
+            boundingSpheres : packedBoundingSpheres,
+            boundingSpheresCV : packedBoundingSpheresCV
         };
     };
 
@@ -22497,10 +22347,10 @@ define('Scene/PrimitivePipeline',[
         return {
             geometries : packedResult.geometries,
             attributeLocations : packedResult.attributeLocations,
-            vaAttributes : packedResult.vaAttributes,
-            perInstanceAttributeLocations : unpackAttributeLocations(packedResult.packedVaAttributeLocations, packedResult.vaAttributes),
             modelMatrix : packedResult.modelMatrix,
-            pickOffsets : packedResult.pickOffsets
+            pickOffsets : packedResult.pickOffsets,
+            boundingSpheres : unpackBoundingSpheres(packedResult.boundingSpheres),
+            boundingSpheresCV : unpackBoundingSpheres(packedResult.boundingSpheresCV)
         };
     };
 
