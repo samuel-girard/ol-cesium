@@ -4571,6 +4571,11 @@ goog.exportProperty(
     'setResolutionScale',
     olcs.OLCesium.prototype.setResolutionScale);
 
+goog.exportProperty(
+    olcs.OLCesium.prototype,
+    'setTargetFrameRate',
+    olcs.OLCesium.prototype.setTargetFrameRate);
+
 goog.exportSymbol(
     'olcs.RasterSynchronizer',
     olcs.RasterSynchronizer);
