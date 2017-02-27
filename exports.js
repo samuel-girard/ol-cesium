@@ -24,7 +24,6 @@ goog.require('ol.Sphere');
 goog.require('ol.Tile');
 goog.require('ol.VectorTile');
 goog.require('ol.View');
-goog.require('ol.animation');
 goog.require('ol.color');
 goog.require('ol.colorlike');
 goog.require('ol.control');
@@ -187,22 +186,6 @@ goog.require('olcs.VectorSynchronizer');
 goog.require('olcs.core');
 
 
-goog.exportSymbol(
-    'ol.animation.bounce',
-    ol.animation.bounce);
-
-goog.exportSymbol(
-    'ol.animation.pan',
-    ol.animation.pan);
-
-goog.exportSymbol(
-    'ol.animation.rotate',
-    ol.animation.rotate);
-
-goog.exportSymbol(
-    'ol.animation.zoom',
-    ol.animation.zoom);
-
 goog.exportProperty(
     ol.AssertionError.prototype,
     'code',
@@ -299,6 +282,10 @@ goog.exportSymbol(
     ol.colorlike.asColorLike);
 
 goog.exportSymbol(
+    'ol.control.defaults',
+    ol.control.defaults);
+
+goog.exportSymbol(
     'ol.coordinate.add',
     ol.coordinate.add);
 
@@ -375,6 +362,86 @@ goog.exportSymbol(
 goog.exportSymbol(
     'ol.easing.upAndDown',
     ol.easing.upAndDown);
+
+goog.exportSymbol(
+    'ol.extent.boundingExtent',
+    ol.extent.boundingExtent);
+
+goog.exportSymbol(
+    'ol.extent.buffer',
+    ol.extent.buffer);
+
+goog.exportSymbol(
+    'ol.extent.containsCoordinate',
+    ol.extent.containsCoordinate);
+
+goog.exportSymbol(
+    'ol.extent.containsExtent',
+    ol.extent.containsExtent);
+
+goog.exportSymbol(
+    'ol.extent.containsXY',
+    ol.extent.containsXY);
+
+goog.exportSymbol(
+    'ol.extent.createEmpty',
+    ol.extent.createEmpty);
+
+goog.exportSymbol(
+    'ol.extent.equals',
+    ol.extent.equals);
+
+goog.exportSymbol(
+    'ol.extent.extend',
+    ol.extent.extend);
+
+goog.exportSymbol(
+    'ol.extent.getBottomLeft',
+    ol.extent.getBottomLeft);
+
+goog.exportSymbol(
+    'ol.extent.getBottomRight',
+    ol.extent.getBottomRight);
+
+goog.exportSymbol(
+    'ol.extent.getCenter',
+    ol.extent.getCenter);
+
+goog.exportSymbol(
+    'ol.extent.getHeight',
+    ol.extent.getHeight);
+
+goog.exportSymbol(
+    'ol.extent.getIntersection',
+    ol.extent.getIntersection);
+
+goog.exportSymbol(
+    'ol.extent.getSize',
+    ol.extent.getSize);
+
+goog.exportSymbol(
+    'ol.extent.getTopLeft',
+    ol.extent.getTopLeft);
+
+goog.exportSymbol(
+    'ol.extent.getTopRight',
+    ol.extent.getTopRight);
+
+goog.exportSymbol(
+    'ol.extent.getWidth',
+    ol.extent.getWidth);
+
+goog.exportSymbol(
+    'ol.extent.intersects',
+    ol.extent.intersects);
+
+goog.exportSymbol(
+    'ol.extent.isEmpty',
+    ol.extent.isEmpty);
+
+goog.exportSymbol(
+    'ol.extent.applyTransform',
+    ol.extent.applyTransform);
 
 goog.exportSymbol(
     'ol.Feature',
@@ -576,6 +643,10 @@ goog.exportSymbol(
     ol.inherits);
 
 goog.exportSymbol(
+    'ol.interaction.defaults',
+    ol.interaction.defaults);
+
+goog.exportSymbol(
     'ol.Kinetic',
     ol.Kinetic);
 
@@ -614,11 +685,6 @@ goog.exportProperty(
     ol.Map.prototype,
     'addOverlay',
     ol.Map.prototype.addOverlay);
-
-goog.exportProperty(
-    ol.Map.prototype,
-    'beforeRender',
-    ol.Map.prototype.beforeRender);
 
 goog.exportProperty(
     ol.Map.prototype,
@@ -887,11 +953,6 @@ goog.exportProperty(
     'un',
     ol.Observable.prototype.un);
 
-goog.exportProperty(
-    ol.Observable.prototype,
-    'unByKey',
-    ol.Observable.prototype.unByKey);
-
 goog.exportSymbol(
     'ol.Overlay',
     ol.Overlay);
@@ -952,12 +1013,78 @@ goog.exportProperty(
     ol.Overlay.prototype.setPositioning);
 
 goog.exportSymbol(
+    'ol.proj.METERS_PER_UNIT',
+    ol.proj.METERS_PER_UNIT);
+
+goog.exportSymbol(
+    'ol.proj.setProj4',
+    ol.proj.setProj4);
+
+goog.exportSymbol(
+    'ol.proj.getPointResolution',
+    ol.proj.getPointResolution);
+
+goog.exportSymbol(
+    'ol.proj.addEquivalentProjections',
+    ol.proj.addEquivalentProjections);
+
+goog.exportSymbol(
+    'ol.proj.addProjection',
+    ol.proj.addProjection);
+
+goog.exportSymbol(
+    'ol.proj.addCoordinateTransforms',
+    ol.proj.addCoordinateTransforms);
+
+goog.exportSymbol(
+    'ol.proj.fromLonLat',
+    ol.proj.fromLonLat);
+
+goog.exportSymbol(
+    'ol.proj.toLonLat',
+    ol.proj.toLonLat);
+
+goog.exportSymbol(
+    'ol.proj.get',
+    ol.proj.get);
+
+goog.exportSymbol(
+    'ol.proj.equivalent',
+    ol.proj.equivalent);
+
+goog.exportSymbol(
+    'ol.proj.getTransform',
+    ol.proj.getTransform);
+
+goog.exportSymbol(
+    'ol.proj.transform',
+    ol.proj.transform);
+
+goog.exportSymbol(
+    'ol.proj.transformExtent',
+    ol.proj.transformExtent);
+
+goog.exportSymbol(
     'ol.render.toContext',
     ol.render.toContext);
 
 goog.exportSymbol(
     'ol.size.toSize',
     ol.size.toSize);
+
+goog.exportSymbol(
+    'ol.Sphere',
+    ol.Sphere);
+
+goog.exportProperty(
+    ol.Sphere.prototype,
+    'geodesicArea',
+    ol.Sphere.prototype.geodesicArea);
+
+goog.exportProperty(
+    ol.Sphere.prototype,
+    'haversineDistance',
+    ol.Sphere.prototype.haversineDistance);
 
 goog.exportProperty(
     ol.Tile.prototype,
@@ -968,6 +1095,10 @@ goog.exportProperty(
     ol.Tile.prototype,
     'load',
     ol.Tile.prototype.load);
+
+goog.exportSymbol(
+    'ol.tilegrid.createXYZ',
+    ol.tilegrid.createXYZ);
 
 goog.exportProperty(
     ol.VectorTile.prototype,
@@ -1110,10 +1241,6 @@ goog.exportProperty(
     ol.webgl.Context.prototype,
     'useProgram',
     ol.webgl.Context.prototype.useProgram);
-
-goog.exportSymbol(
-    'ol.tilegrid.createXYZ',
-    ol.tilegrid.createXYZ);
 
 goog.exportSymbol(
     'ol.tilegrid.TileGrid',
@@ -1397,6 +1524,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.style.Stroke.prototype,
+    'getLineDashOffset',
+    ol.style.Stroke.prototype.getLineDashOffset);
+
+goog.exportProperty(
+    ol.style.Stroke.prototype,
     'getLineJoin',
     ol.style.Stroke.prototype.getLineJoin);
 
@@ -1424,6 +1556,11 @@ goog.exportProperty(
     ol.style.Stroke.prototype,
     'setLineDash',
     ol.style.Stroke.prototype.setLineDash);
+
+goog.exportProperty(
+    ol.style.Stroke.prototype,
+    'setLineDashOffset',
+    ol.style.Stroke.prototype.setLineDashOffset);
 
 goog.exportProperty(
     ol.style.Stroke.prototype,
@@ -1627,20 +1764,6 @@ goog.exportProperty(
     ol.style.Text.prototype,
     'setTextBaseline',
     ol.style.Text.prototype.setTextBaseline);
-
-goog.exportSymbol(
-    'ol.Sphere',
-    ol.Sphere);
-
-goog.exportProperty(
-    ol.Sphere.prototype,
-    'geodesicArea',
-    ol.Sphere.prototype.geodesicArea);
-
-goog.exportProperty(
-    ol.Sphere.prototype,
-    'haversineDistance',
-    ol.Sphere.prototype.haversineDistance);
 
 goog.exportSymbol(
     'ol.source.BingMaps',
@@ -2262,58 +2385,6 @@ goog.exportSymbol(
     ol.proj.common.add);
 
 goog.exportSymbol(
-    'ol.proj.METERS_PER_UNIT',
-    ol.proj.METERS_PER_UNIT);
-
-goog.exportSymbol(
-    'ol.proj.setProj4',
-    ol.proj.setProj4);
-
-goog.exportSymbol(
-    'ol.proj.getPointResolution',
-    ol.proj.getPointResolution);
-
-goog.exportSymbol(
-    'ol.proj.addEquivalentProjections',
-    ol.proj.addEquivalentProjections);
-
-goog.exportSymbol(
-    'ol.proj.addProjection',
-    ol.proj.addProjection);
-
-goog.exportSymbol(
-    'ol.proj.addCoordinateTransforms',
-    ol.proj.addCoordinateTransforms);
-
-goog.exportSymbol(
-    'ol.proj.fromLonLat',
-    ol.proj.fromLonLat);
-
-goog.exportSymbol(
-    'ol.proj.toLonLat',
-    ol.proj.toLonLat);
-
-goog.exportSymbol(
-    'ol.proj.get',
-    ol.proj.get);
-
-goog.exportSymbol(
-    'ol.proj.equivalent',
-    ol.proj.equivalent);
-
-goog.exportSymbol(
-    'ol.proj.getTransform',
-    ol.proj.getTransform);
-
-goog.exportSymbol(
-    'ol.proj.transform',
-    ol.proj.transform);
-
-goog.exportSymbol(
-    'ol.proj.transformExtent',
-    ol.proj.transformExtent);
-
-goog.exportSymbol(
     'ol.proj.Projection',
     ol.proj.Projection);
 
@@ -2708,10 +2779,6 @@ goog.exportProperty(
     ol.interaction.Extent.Event.prototype,
     'extent_',
     ol.interaction.Extent.Event.prototype.extent_);
-
-goog.exportSymbol(
-    'ol.interaction.defaults',
-    ol.interaction.defaults);
 
 goog.exportSymbol(
     'ol.interaction.Interaction',
@@ -3451,6 +3518,66 @@ goog.exportSymbol(
     ol.format.Feature);
 
 goog.exportSymbol(
+    'ol.format.filter.and',
+    ol.format.filter.and);
+
+goog.exportSymbol(
+    'ol.format.filter.or',
+    ol.format.filter.or);
+
+goog.exportSymbol(
+    'ol.format.filter.not',
+    ol.format.filter.not);
+
+goog.exportSymbol(
+    'ol.format.filter.bbox',
+    ol.format.filter.bbox);
+
+goog.exportSymbol(
+    'ol.format.filter.intersects',
+    ol.format.filter.intersects);
+
+goog.exportSymbol(
+    'ol.format.filter.within',
+    ol.format.filter.within);
+
+goog.exportSymbol(
+    'ol.format.filter.equalTo',
+    ol.format.filter.equalTo);
+
+goog.exportSymbol(
+    'ol.format.filter.notEqualTo',
+    ol.format.filter.notEqualTo);
+
+goog.exportSymbol(
+    'ol.format.filter.lessThan',
+    ol.format.filter.lessThan);
+
+goog.exportSymbol(
+    'ol.format.filter.lessThanOrEqualTo',
+    ol.format.filter.lessThanOrEqualTo);
+
+goog.exportSymbol(
+    'ol.format.filter.greaterThan',
+    ol.format.filter.greaterThan);
+
+goog.exportSymbol(
+    'ol.format.filter.greaterThanOrEqualTo',
+    ol.format.filter.greaterThanOrEqualTo);
+
+goog.exportSymbol(
+    'ol.format.filter.isNull',
+    ol.format.filter.isNull);
+
+goog.exportSymbol(
+    'ol.format.filter.between',
+    ol.format.filter.between);
+
+goog.exportSymbol(
+    'ol.format.filter.like',
+    ol.format.filter.like);
+
+goog.exportSymbol(
     'ol.format.GeoJSON',
     ol.format.GeoJSON);
 
@@ -3863,66 +3990,6 @@ goog.exportSymbol(
     ol.format.filter.GreaterThanOrEqualTo);
 
 goog.exportSymbol(
-    'ol.format.filter.and',
-    ol.format.filter.and);
-
-goog.exportSymbol(
-    'ol.format.filter.or',
-    ol.format.filter.or);
-
-goog.exportSymbol(
-    'ol.format.filter.not',
-    ol.format.filter.not);
-
-goog.exportSymbol(
-    'ol.format.filter.bbox',
-    ol.format.filter.bbox);
-
-goog.exportSymbol(
-    'ol.format.filter.intersects',
-    ol.format.filter.intersects);
-
-goog.exportSymbol(
-    'ol.format.filter.within',
-    ol.format.filter.within);
-
-goog.exportSymbol(
-    'ol.format.filter.equalTo',
-    ol.format.filter.equalTo);
-
-goog.exportSymbol(
-    'ol.format.filter.notEqualTo',
-    ol.format.filter.notEqualTo);
-
-goog.exportSymbol(
-    'ol.format.filter.lessThan',
-    ol.format.filter.lessThan);
-
-goog.exportSymbol(
-    'ol.format.filter.lessThanOrEqualTo',
-    ol.format.filter.lessThanOrEqualTo);
-
-goog.exportSymbol(
-    'ol.format.filter.greaterThan',
-    ol.format.filter.greaterThan);
-
-goog.exportSymbol(
-    'ol.format.filter.greaterThanOrEqualTo',
-    ol.format.filter.greaterThanOrEqualTo);
-
-goog.exportSymbol(
-    'ol.format.filter.isNull',
-    ol.format.filter.isNull);
-
-goog.exportSymbol(
-    'ol.format.filter.between',
-    ol.format.filter.between);
-
-goog.exportSymbol(
-    'ol.format.filter.like',
-    ol.format.filter.like);
-
-goog.exportSymbol(
     'ol.format.filter.Intersects',
     ol.format.filter.Intersects);
 
@@ -3965,86 +4032,6 @@ goog.exportSymbol(
 goog.exportSymbol(
     'ol.format.filter.Within',
     ol.format.filter.Within);
-
-goog.exportSymbol(
-    'ol.extent.boundingExtent',
-    ol.extent.boundingExtent);
-
-goog.exportSymbol(
-    'ol.extent.buffer',
-    ol.extent.buffer);
-
-goog.exportSymbol(
-    'ol.extent.containsCoordinate',
-    ol.extent.containsCoordinate);
-
-goog.exportSymbol(
-    'ol.extent.containsExtent',
-    ol.extent.containsExtent);
-
-goog.exportSymbol(
-    'ol.extent.containsXY',
-    ol.extent.containsXY);
-
-goog.exportSymbol(
-    'ol.extent.createEmpty',
-    ol.extent.createEmpty);
-
-goog.exportSymbol(
-    'ol.extent.equals',
-    ol.extent.equals);
-
-goog.exportSymbol(
-    'ol.extent.extend',
-    ol.extent.extend);
-
-goog.exportSymbol(
-    'ol.extent.getBottomLeft',
-    ol.extent.getBottomLeft);
-
-goog.exportSymbol(
-    'ol.extent.getBottomRight',
-    ol.extent.getBottomRight);
-
-goog.exportSymbol(
-    'ol.extent.getCenter',
-    ol.extent.getCenter);
-
-goog.exportSymbol(
-    'ol.extent.getHeight',
-    ol.extent.getHeight);
-
-goog.exportSymbol(
-    'ol.extent.getIntersection',
-    ol.extent.getIntersection);
-
-goog.exportSymbol(
-    'ol.extent.getSize',
-    ol.extent.getSize);
-
-goog.exportSymbol(
-    'ol.extent.getTopLeft',
-    ol.extent.getTopLeft);
-
-goog.exportSymbol(
-    'ol.extent.getTopRight',
-    ol.extent.getTopRight);
-
-goog.exportSymbol(
-    'ol.extent.getWidth',
-    ol.extent.getWidth);
-
-goog.exportSymbol(
-    'ol.extent.intersects',
-    ol.extent.intersects);
-
-goog.exportSymbol(
-    'ol.extent.isEmpty',
-    ol.extent.isEmpty);
-
-goog.exportSymbol(
-    'ol.extent.applyTransform',
-    ol.extent.applyTransform);
 
 goog.exportSymbol(
     'ol.events.condition.altKeyOnly',
@@ -4177,10 +4164,6 @@ goog.exportProperty(
     ol.control.FullScreen.prototype,
     'setMap',
     ol.control.FullScreen.prototype.setMap);
-
-goog.exportSymbol(
-    'ol.control.defaults',
-    ol.control.defaults);
 
 goog.exportSymbol(
     'ol.control.MousePosition',
@@ -4642,11 +4625,6 @@ goog.exportProperty(
     ol.Object.prototype.un);
 
 goog.exportProperty(
-    ol.Object.prototype,
-    'unByKey',
-    ol.Object.prototype.unByKey);
-
-goog.exportProperty(
     ol.Collection.prototype,
     'get',
     ol.Collection.prototype.get);
@@ -4705,11 +4683,6 @@ goog.exportProperty(
     ol.Collection.prototype,
     'un',
     ol.Collection.prototype.un);
-
-goog.exportProperty(
-    ol.Collection.prototype,
-    'unByKey',
-    ol.Collection.prototype.unByKey);
 
 goog.exportProperty(
     ol.Collection.Event.prototype,
@@ -4792,11 +4765,6 @@ goog.exportProperty(
     ol.DeviceOrientation.prototype.un);
 
 goog.exportProperty(
-    ol.DeviceOrientation.prototype,
-    'unByKey',
-    ol.DeviceOrientation.prototype.unByKey);
-
-goog.exportProperty(
     ol.Feature.prototype,
     'get',
     ol.Feature.prototype.get);
@@ -4855,11 +4823,6 @@ goog.exportProperty(
     ol.Feature.prototype,
     'un',
     ol.Feature.prototype.un);
-
-goog.exportProperty(
-    ol.Feature.prototype,
-    'unByKey',
-    ol.Feature.prototype.unByKey);
 
 goog.exportProperty(
     ol.Geolocation.prototype,
@@ -4922,14 +4885,14 @@ goog.exportProperty(
     ol.Geolocation.prototype.un);
 
 goog.exportProperty(
-    ol.Geolocation.prototype,
-    'unByKey',
-    ol.Geolocation.prototype.unByKey);
-
-goog.exportProperty(
     ol.ImageTile.prototype,
     'getTileCoord',
     ol.ImageTile.prototype.getTileCoord);
+
+goog.exportProperty(
+    ol.ImageTile.prototype,
+    'load',
+    ol.ImageTile.prototype.load);
 
 goog.exportProperty(
     ol.Map.prototype,
@@ -4990,11 +4953,6 @@ goog.exportProperty(
     ol.Map.prototype,
     'un',
     ol.Map.prototype.un);
-
-goog.exportProperty(
-    ol.Map.prototype,
-    'unByKey',
-    ol.Map.prototype.unByKey);
 
 goog.exportProperty(
     ol.MapEvent.prototype,
@@ -5177,14 +5135,14 @@ goog.exportProperty(
     ol.Overlay.prototype.un);
 
 goog.exportProperty(
-    ol.Overlay.prototype,
-    'unByKey',
-    ol.Overlay.prototype.unByKey);
-
-goog.exportProperty(
     ol.VectorTile.prototype,
     'getTileCoord',
     ol.VectorTile.prototype.getTileCoord);
+
+goog.exportProperty(
+    ol.VectorTile.prototype,
+    'load',
+    ol.VectorTile.prototype.load);
 
 goog.exportProperty(
     ol.View.prototype,
@@ -5245,11 +5203,6 @@ goog.exportProperty(
     ol.View.prototype,
     'un',
     ol.View.prototype.un);
-
-goog.exportProperty(
-    ol.View.prototype,
-    'unByKey',
-    ol.View.prototype.unByKey);
 
 goog.exportProperty(
     ol.tilegrid.WMTS.prototype,
@@ -5345,6 +5298,11 @@ goog.exportProperty(
     ol.style.RegularShape.prototype,
     'setScale',
     ol.style.RegularShape.prototype.setScale);
+
+goog.exportProperty(
+    ol.style.Circle.prototype,
+    'clone',
+    ol.style.Circle.prototype.clone);
 
 goog.exportProperty(
     ol.style.Circle.prototype,
@@ -5517,11 +5475,6 @@ goog.exportProperty(
     ol.source.Source.prototype.un);
 
 goog.exportProperty(
-    ol.source.Source.prototype,
-    'unByKey',
-    ol.source.Source.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.Tile.prototype,
     'getAttributions',
     ol.source.Tile.prototype.getAttributions);
@@ -5610,11 +5563,6 @@ goog.exportProperty(
     ol.source.Tile.prototype,
     'un',
     ol.source.Tile.prototype.un);
-
-goog.exportProperty(
-    ol.source.Tile.prototype,
-    'unByKey',
-    ol.source.Tile.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.UrlTile.prototype,
@@ -5710,11 +5658,6 @@ goog.exportProperty(
     ol.source.UrlTile.prototype,
     'un',
     ol.source.UrlTile.prototype.un);
-
-goog.exportProperty(
-    ol.source.UrlTile.prototype,
-    'unByKey',
-    ol.source.UrlTile.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.TileImage.prototype,
@@ -5845,11 +5788,6 @@ goog.exportProperty(
     ol.source.TileImage.prototype,
     'un',
     ol.source.TileImage.prototype.un);
-
-goog.exportProperty(
-    ol.source.TileImage.prototype,
-    'unByKey',
-    ol.source.TileImage.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.BingMaps.prototype,
@@ -5992,11 +5930,6 @@ goog.exportProperty(
     ol.source.BingMaps.prototype.un);
 
 goog.exportProperty(
-    ol.source.BingMaps.prototype,
-    'unByKey',
-    ol.source.BingMaps.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.XYZ.prototype,
     'setRenderReprojectionEdges',
     ol.source.XYZ.prototype.setRenderReprojectionEdges);
@@ -6135,11 +6068,6 @@ goog.exportProperty(
     ol.source.XYZ.prototype,
     'un',
     ol.source.XYZ.prototype.un);
-
-goog.exportProperty(
-    ol.source.XYZ.prototype,
-    'unByKey',
-    ol.source.XYZ.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.CartoDB.prototype,
@@ -6282,11 +6210,6 @@ goog.exportProperty(
     ol.source.CartoDB.prototype.un);
 
 goog.exportProperty(
-    ol.source.CartoDB.prototype,
-    'unByKey',
-    ol.source.CartoDB.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.Vector.prototype,
     'getAttributions',
     ol.source.Vector.prototype.getAttributions);
@@ -6375,11 +6298,6 @@ goog.exportProperty(
     ol.source.Vector.prototype,
     'un',
     ol.source.Vector.prototype.un);
-
-goog.exportProperty(
-    ol.source.Vector.prototype,
-    'unByKey',
-    ol.source.Vector.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.Cluster.prototype,
@@ -6552,11 +6470,6 @@ goog.exportProperty(
     ol.source.Cluster.prototype.un);
 
 goog.exportProperty(
-    ol.source.Cluster.prototype,
-    'unByKey',
-    ol.source.Cluster.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.Image.prototype,
     'getAttributions',
     ol.source.Image.prototype.getAttributions);
@@ -6645,11 +6558,6 @@ goog.exportProperty(
     ol.source.Image.prototype,
     'un',
     ol.source.Image.prototype.un);
-
-goog.exportProperty(
-    ol.source.Image.prototype,
-    'unByKey',
-    ol.source.Image.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.Image.Event.prototype,
@@ -6762,11 +6670,6 @@ goog.exportProperty(
     ol.source.ImageArcGISRest.prototype.un);
 
 goog.exportProperty(
-    ol.source.ImageArcGISRest.prototype,
-    'unByKey',
-    ol.source.ImageArcGISRest.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.ImageCanvas.prototype,
     'getAttributions',
     ol.source.ImageCanvas.prototype.getAttributions);
@@ -6855,11 +6758,6 @@ goog.exportProperty(
     ol.source.ImageCanvas.prototype,
     'un',
     ol.source.ImageCanvas.prototype.un);
-
-goog.exportProperty(
-    ol.source.ImageCanvas.prototype,
-    'unByKey',
-    ol.source.ImageCanvas.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.ImageMapGuide.prototype,
@@ -6952,11 +6850,6 @@ goog.exportProperty(
     ol.source.ImageMapGuide.prototype.un);
 
 goog.exportProperty(
-    ol.source.ImageMapGuide.prototype,
-    'unByKey',
-    ol.source.ImageMapGuide.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.ImageStatic.prototype,
     'getAttributions',
     ol.source.ImageStatic.prototype.getAttributions);
@@ -7045,11 +6938,6 @@ goog.exportProperty(
     ol.source.ImageStatic.prototype,
     'un',
     ol.source.ImageStatic.prototype.un);
-
-goog.exportProperty(
-    ol.source.ImageStatic.prototype,
-    'unByKey',
-    ol.source.ImageStatic.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.ImageVector.prototype,
@@ -7142,11 +7030,6 @@ goog.exportProperty(
     ol.source.ImageVector.prototype.un);
 
 goog.exportProperty(
-    ol.source.ImageVector.prototype,
-    'unByKey',
-    ol.source.ImageVector.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.ImageWMS.prototype,
     'getAttributions',
     ol.source.ImageWMS.prototype.getAttributions);
@@ -7235,11 +7118,6 @@ goog.exportProperty(
     ol.source.ImageWMS.prototype,
     'un',
     ol.source.ImageWMS.prototype.un);
-
-goog.exportProperty(
-    ol.source.ImageWMS.prototype,
-    'unByKey',
-    ol.source.ImageWMS.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.OSM.prototype,
@@ -7382,11 +7260,6 @@ goog.exportProperty(
     ol.source.OSM.prototype.un);
 
 goog.exportProperty(
-    ol.source.OSM.prototype,
-    'unByKey',
-    ol.source.OSM.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.Raster.prototype,
     'getAttributions',
     ol.source.Raster.prototype.getAttributions);
@@ -7475,11 +7348,6 @@ goog.exportProperty(
     ol.source.Raster.prototype,
     'un',
     ol.source.Raster.prototype.un);
-
-goog.exportProperty(
-    ol.source.Raster.prototype,
-    'unByKey',
-    ol.source.Raster.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.Raster.Event.prototype,
@@ -7642,11 +7510,6 @@ goog.exportProperty(
     ol.source.Stamen.prototype.un);
 
 goog.exportProperty(
-    ol.source.Stamen.prototype,
-    'unByKey',
-    ol.source.Stamen.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.Tile.Event.prototype,
     'type',
     ol.source.Tile.Event.prototype.type);
@@ -7807,11 +7670,6 @@ goog.exportProperty(
     ol.source.TileArcGISRest.prototype.un);
 
 goog.exportProperty(
-    ol.source.TileArcGISRest.prototype,
-    'unByKey',
-    ol.source.TileArcGISRest.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.TileDebug.prototype,
     'getTileGrid',
     ol.source.TileDebug.prototype.getTileGrid);
@@ -7905,11 +7763,6 @@ goog.exportProperty(
     ol.source.TileDebug.prototype,
     'un',
     ol.source.TileDebug.prototype.un);
-
-goog.exportProperty(
-    ol.source.TileDebug.prototype,
-    'unByKey',
-    ol.source.TileDebug.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.TileJSON.prototype,
@@ -8052,11 +7905,6 @@ goog.exportProperty(
     ol.source.TileJSON.prototype.un);
 
 goog.exportProperty(
-    ol.source.TileJSON.prototype,
-    'unByKey',
-    ol.source.TileJSON.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.TileUTFGrid.prototype,
     'getTileGrid',
     ol.source.TileUTFGrid.prototype.getTileGrid);
@@ -8150,11 +7998,6 @@ goog.exportProperty(
     ol.source.TileUTFGrid.prototype,
     'un',
     ol.source.TileUTFGrid.prototype.un);
-
-goog.exportProperty(
-    ol.source.TileUTFGrid.prototype,
-    'unByKey',
-    ol.source.TileUTFGrid.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.TileWMS.prototype,
@@ -8295,11 +8138,6 @@ goog.exportProperty(
     ol.source.TileWMS.prototype,
     'un',
     ol.source.TileWMS.prototype.un);
-
-goog.exportProperty(
-    ol.source.TileWMS.prototype,
-    'unByKey',
-    ol.source.TileWMS.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.Vector.Event.prototype,
@@ -8452,11 +8290,6 @@ goog.exportProperty(
     ol.source.VectorTile.prototype.un);
 
 goog.exportProperty(
-    ol.source.VectorTile.prototype,
-    'unByKey',
-    ol.source.VectorTile.prototype.unByKey);
-
-goog.exportProperty(
     ol.source.WMTS.prototype,
     'setRenderReprojectionEdges',
     ol.source.WMTS.prototype.setRenderReprojectionEdges);
@@ -8595,11 +8428,6 @@ goog.exportProperty(
     ol.source.WMTS.prototype,
     'un',
     ol.source.WMTS.prototype.un);
-
-goog.exportProperty(
-    ol.source.WMTS.prototype,
-    'unByKey',
-    ol.source.WMTS.prototype.unByKey);
 
 goog.exportProperty(
     ol.source.Zoomify.prototype,
@@ -8742,11 +8570,6 @@ goog.exportProperty(
     ol.source.Zoomify.prototype.un);
 
 goog.exportProperty(
-    ol.source.Zoomify.prototype,
-    'unByKey',
-    ol.source.Zoomify.prototype.unByKey);
-
-goog.exportProperty(
     ol.reproj.Tile.prototype,
     'getTileCoord',
     ol.reproj.Tile.prototype.getTileCoord);
@@ -8787,11 +8610,6 @@ goog.exportProperty(
     ol.renderer.Layer.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.Layer.prototype,
-    'unByKey',
-    ol.renderer.Layer.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.webgl.Layer.prototype,
     'changed',
     ol.renderer.webgl.Layer.prototype.changed);
@@ -8820,11 +8638,6 @@ goog.exportProperty(
     ol.renderer.webgl.Layer.prototype,
     'un',
     ol.renderer.webgl.Layer.prototype.un);
-
-goog.exportProperty(
-    ol.renderer.webgl.Layer.prototype,
-    'unByKey',
-    ol.renderer.webgl.Layer.prototype.unByKey);
 
 goog.exportProperty(
     ol.renderer.webgl.ImageLayer.prototype,
@@ -8857,11 +8670,6 @@ goog.exportProperty(
     ol.renderer.webgl.ImageLayer.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.webgl.ImageLayer.prototype,
-    'unByKey',
-    ol.renderer.webgl.ImageLayer.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.webgl.TileLayer.prototype,
     'changed',
     ol.renderer.webgl.TileLayer.prototype.changed);
@@ -8890,11 +8698,6 @@ goog.exportProperty(
     ol.renderer.webgl.TileLayer.prototype,
     'un',
     ol.renderer.webgl.TileLayer.prototype.un);
-
-goog.exportProperty(
-    ol.renderer.webgl.TileLayer.prototype,
-    'unByKey',
-    ol.renderer.webgl.TileLayer.prototype.unByKey);
 
 goog.exportProperty(
     ol.renderer.webgl.VectorLayer.prototype,
@@ -8927,11 +8730,6 @@ goog.exportProperty(
     ol.renderer.webgl.VectorLayer.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.webgl.VectorLayer.prototype,
-    'unByKey',
-    ol.renderer.webgl.VectorLayer.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.canvas.Layer.prototype,
     'changed',
     ol.renderer.canvas.Layer.prototype.changed);
@@ -8960,11 +8758,6 @@ goog.exportProperty(
     ol.renderer.canvas.Layer.prototype,
     'un',
     ol.renderer.canvas.Layer.prototype.un);
-
-goog.exportProperty(
-    ol.renderer.canvas.Layer.prototype,
-    'unByKey',
-    ol.renderer.canvas.Layer.prototype.unByKey);
 
 goog.exportProperty(
     ol.renderer.canvas.IntermediateCanvas.prototype,
@@ -8997,11 +8790,6 @@ goog.exportProperty(
     ol.renderer.canvas.IntermediateCanvas.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.canvas.IntermediateCanvas.prototype,
-    'unByKey',
-    ol.renderer.canvas.IntermediateCanvas.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.canvas.ImageLayer.prototype,
     'changed',
     ol.renderer.canvas.ImageLayer.prototype.changed);
@@ -9030,11 +8818,6 @@ goog.exportProperty(
     ol.renderer.canvas.ImageLayer.prototype,
     'un',
     ol.renderer.canvas.ImageLayer.prototype.un);
-
-goog.exportProperty(
-    ol.renderer.canvas.ImageLayer.prototype,
-    'unByKey',
-    ol.renderer.canvas.ImageLayer.prototype.unByKey);
 
 goog.exportProperty(
     ol.renderer.canvas.TileLayer.prototype,
@@ -9067,11 +8850,6 @@ goog.exportProperty(
     ol.renderer.canvas.TileLayer.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.canvas.TileLayer.prototype,
-    'unByKey',
-    ol.renderer.canvas.TileLayer.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.canvas.VectorLayer.prototype,
     'changed',
     ol.renderer.canvas.VectorLayer.prototype.changed);
@@ -9102,11 +8880,6 @@ goog.exportProperty(
     ol.renderer.canvas.VectorLayer.prototype.un);
 
 goog.exportProperty(
-    ol.renderer.canvas.VectorLayer.prototype,
-    'unByKey',
-    ol.renderer.canvas.VectorLayer.prototype.unByKey);
-
-goog.exportProperty(
     ol.renderer.canvas.VectorTileLayer.prototype,
     'changed',
     ol.renderer.canvas.VectorTileLayer.prototype.changed);
@@ -9135,11 +8908,6 @@ goog.exportProperty(
     ol.renderer.canvas.VectorTileLayer.prototype,
     'un',
     ol.renderer.canvas.VectorTileLayer.prototype.un);
-
-goog.exportProperty(
-    ol.renderer.canvas.VectorTileLayer.prototype,
-    'unByKey',
-    ol.renderer.canvas.VectorTileLayer.prototype.unByKey);
 
 goog.exportProperty(
     ol.render.Event.prototype,
@@ -9240,11 +9008,6 @@ goog.exportProperty(
     ol.layer.Base.prototype,
     'un',
     ol.layer.Base.prototype.un);
-
-goog.exportProperty(
-    ol.layer.Base.prototype,
-    'unByKey',
-    ol.layer.Base.prototype.unByKey);
 
 goog.exportProperty(
     ol.layer.Group.prototype,
@@ -9367,11 +9130,6 @@ goog.exportProperty(
     ol.layer.Group.prototype.un);
 
 goog.exportProperty(
-    ol.layer.Group.prototype,
-    'unByKey',
-    ol.layer.Group.prototype.unByKey);
-
-goog.exportProperty(
     ol.layer.Layer.prototype,
     'getExtent',
     ol.layer.Layer.prototype.getExtent);
@@ -9490,11 +9248,6 @@ goog.exportProperty(
     ol.layer.Layer.prototype,
     'un',
     ol.layer.Layer.prototype.un);
-
-goog.exportProperty(
-    ol.layer.Layer.prototype,
-    'unByKey',
-    ol.layer.Layer.prototype.unByKey);
 
 goog.exportProperty(
     ol.layer.Vector.prototype,
@@ -9625,11 +9378,6 @@ goog.exportProperty(
     ol.layer.Vector.prototype,
     'un',
     ol.layer.Vector.prototype.un);
-
-goog.exportProperty(
-    ol.layer.Vector.prototype,
-    'unByKey',
-    ol.layer.Vector.prototype.unByKey);
 
 goog.exportProperty(
     ol.layer.Heatmap.prototype,
@@ -9782,11 +9530,6 @@ goog.exportProperty(
     ol.layer.Heatmap.prototype.un);
 
 goog.exportProperty(
-    ol.layer.Heatmap.prototype,
-    'unByKey',
-    ol.layer.Heatmap.prototype.unByKey);
-
-goog.exportProperty(
     ol.layer.Image.prototype,
     'setMap',
     ol.layer.Image.prototype.setMap);
@@ -9917,11 +9660,6 @@ goog.exportProperty(
     ol.layer.Image.prototype.un);
 
 goog.exportProperty(
-    ol.layer.Image.prototype,
-    'unByKey',
-    ol.layer.Image.prototype.unByKey);
-
-goog.exportProperty(
     ol.layer.Tile.prototype,
     'setMap',
     ol.layer.Tile.prototype.setMap);
@@ -10050,11 +9788,6 @@ goog.exportProperty(
     ol.layer.Tile.prototype,
     'un',
     ol.layer.Tile.prototype.un);
-
-goog.exportProperty(
-    ol.layer.Tile.prototype,
-    'unByKey',
-    ol.layer.Tile.prototype.unByKey);
 
 goog.exportProperty(
     ol.layer.VectorTile.prototype,
@@ -10207,11 +9940,6 @@ goog.exportProperty(
     ol.layer.VectorTile.prototype.un);
 
 goog.exportProperty(
-    ol.layer.VectorTile.prototype,
-    'unByKey',
-    ol.layer.VectorTile.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Interaction.prototype,
     'get',
     ol.interaction.Interaction.prototype.get);
@@ -10270,11 +9998,6 @@ goog.exportProperty(
     ol.interaction.Interaction.prototype,
     'un',
     ol.interaction.Interaction.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.Interaction.prototype,
-    'unByKey',
-    ol.interaction.Interaction.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.DoubleClickZoom.prototype,
@@ -10352,11 +10075,6 @@ goog.exportProperty(
     ol.interaction.DoubleClickZoom.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.DoubleClickZoom.prototype,
-    'unByKey',
-    ol.interaction.DoubleClickZoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.DragAndDrop.prototype,
     'getActive',
     ol.interaction.DragAndDrop.prototype.getActive);
@@ -10430,11 +10148,6 @@ goog.exportProperty(
     ol.interaction.DragAndDrop.prototype,
     'un',
     ol.interaction.DragAndDrop.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.DragAndDrop.prototype,
-    'unByKey',
-    ol.interaction.DragAndDrop.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.DragAndDrop.Event.prototype,
@@ -10532,11 +10245,6 @@ goog.exportProperty(
     ol.interaction.Pointer.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.Pointer.prototype,
-    'unByKey',
-    ol.interaction.Pointer.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.DragBox.prototype,
     'getActive',
     ol.interaction.DragBox.prototype.getActive);
@@ -10610,11 +10318,6 @@ goog.exportProperty(
     ol.interaction.DragBox.prototype,
     'un',
     ol.interaction.DragBox.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.DragBox.prototype,
-    'unByKey',
-    ol.interaction.DragBox.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.DragBox.Event.prototype,
@@ -10712,11 +10415,6 @@ goog.exportProperty(
     ol.interaction.DragPan.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.DragPan.prototype,
-    'unByKey',
-    ol.interaction.DragPan.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.DragRotate.prototype,
     'getActive',
     ol.interaction.DragRotate.prototype.getActive);
@@ -10792,11 +10490,6 @@ goog.exportProperty(
     ol.interaction.DragRotate.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.DragRotate.prototype,
-    'unByKey',
-    ol.interaction.DragRotate.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.DragRotateAndZoom.prototype,
     'getActive',
     ol.interaction.DragRotateAndZoom.prototype.getActive);
@@ -10870,11 +10563,6 @@ goog.exportProperty(
     ol.interaction.DragRotateAndZoom.prototype,
     'un',
     ol.interaction.DragRotateAndZoom.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.DragRotateAndZoom.prototype,
-    'unByKey',
-    ol.interaction.DragRotateAndZoom.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.DragZoom.prototype,
@@ -10957,11 +10645,6 @@ goog.exportProperty(
     ol.interaction.DragZoom.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.DragZoom.prototype,
-    'unByKey',
-    ol.interaction.DragZoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Draw.prototype,
     'getActive',
     ol.interaction.Draw.prototype.getActive);
@@ -11035,11 +10718,6 @@ goog.exportProperty(
     ol.interaction.Draw.prototype,
     'un',
     ol.interaction.Draw.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.Draw.prototype,
-    'unByKey',
-    ol.interaction.Draw.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.Draw.Event.prototype,
@@ -11137,11 +10815,6 @@ goog.exportProperty(
     ol.interaction.Extent.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.Extent.prototype,
-    'unByKey',
-    ol.interaction.Extent.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Extent.Event.prototype,
     'type',
     ol.interaction.Extent.Event.prototype.type);
@@ -11237,11 +10910,6 @@ goog.exportProperty(
     ol.interaction.KeyboardPan.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.KeyboardPan.prototype,
-    'unByKey',
-    ol.interaction.KeyboardPan.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.KeyboardZoom.prototype,
     'getActive',
     ol.interaction.KeyboardZoom.prototype.getActive);
@@ -11317,11 +10985,6 @@ goog.exportProperty(
     ol.interaction.KeyboardZoom.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.KeyboardZoom.prototype,
-    'unByKey',
-    ol.interaction.KeyboardZoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Modify.prototype,
     'getActive',
     ol.interaction.Modify.prototype.getActive);
@@ -11395,11 +11058,6 @@ goog.exportProperty(
     ol.interaction.Modify.prototype,
     'un',
     ol.interaction.Modify.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.Modify.prototype,
-    'unByKey',
-    ol.interaction.Modify.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.Modify.Event.prototype,
@@ -11497,11 +11155,6 @@ goog.exportProperty(
     ol.interaction.MouseWheelZoom.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.MouseWheelZoom.prototype,
-    'unByKey',
-    ol.interaction.MouseWheelZoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.PinchRotate.prototype,
     'getActive',
     ol.interaction.PinchRotate.prototype.getActive);
@@ -11575,11 +11228,6 @@ goog.exportProperty(
     ol.interaction.PinchRotate.prototype,
     'un',
     ol.interaction.PinchRotate.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.PinchRotate.prototype,
-    'unByKey',
-    ol.interaction.PinchRotate.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.PinchZoom.prototype,
@@ -11657,11 +11305,6 @@ goog.exportProperty(
     ol.interaction.PinchZoom.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.PinchZoom.prototype,
-    'unByKey',
-    ol.interaction.PinchZoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Select.prototype,
     'getActive',
     ol.interaction.Select.prototype.getActive);
@@ -11735,11 +11378,6 @@ goog.exportProperty(
     ol.interaction.Select.prototype,
     'un',
     ol.interaction.Select.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.Select.prototype,
-    'unByKey',
-    ol.interaction.Select.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.Select.Event.prototype,
@@ -11837,11 +11475,6 @@ goog.exportProperty(
     ol.interaction.Snap.prototype.un);
 
 goog.exportProperty(
-    ol.interaction.Snap.prototype,
-    'unByKey',
-    ol.interaction.Snap.prototype.unByKey);
-
-goog.exportProperty(
     ol.interaction.Translate.prototype,
     'getActive',
     ol.interaction.Translate.prototype.getActive);
@@ -11915,11 +11548,6 @@ goog.exportProperty(
     ol.interaction.Translate.prototype,
     'un',
     ol.interaction.Translate.prototype.un);
-
-goog.exportProperty(
-    ol.interaction.Translate.prototype,
-    'unByKey',
-    ol.interaction.Translate.prototype.unByKey);
 
 goog.exportProperty(
     ol.interaction.Translate.Event.prototype,
@@ -12000,11 +11628,6 @@ goog.exportProperty(
     ol.geom.Geometry.prototype,
     'un',
     ol.geom.Geometry.prototype.un);
-
-goog.exportProperty(
-    ol.geom.Geometry.prototype,
-    'unByKey',
-    ol.geom.Geometry.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.SimpleGeometry.prototype,
@@ -12100,11 +11723,6 @@ goog.exportProperty(
     ol.geom.SimpleGeometry.prototype,
     'un',
     ol.geom.SimpleGeometry.prototype.un);
-
-goog.exportProperty(
-    ol.geom.SimpleGeometry.prototype,
-    'unByKey',
-    ol.geom.SimpleGeometry.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.Circle.prototype,
@@ -12212,11 +11830,6 @@ goog.exportProperty(
     ol.geom.Circle.prototype.un);
 
 goog.exportProperty(
-    ol.geom.Circle.prototype,
-    'unByKey',
-    ol.geom.Circle.prototype.unByKey);
-
-goog.exportProperty(
     ol.geom.GeometryCollection.prototype,
     'getClosestPoint',
     ol.geom.GeometryCollection.prototype.getClosestPoint);
@@ -12310,11 +11923,6 @@ goog.exportProperty(
     ol.geom.GeometryCollection.prototype,
     'un',
     ol.geom.GeometryCollection.prototype.un);
-
-goog.exportProperty(
-    ol.geom.GeometryCollection.prototype,
-    'unByKey',
-    ol.geom.GeometryCollection.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.LinearRing.prototype,
@@ -12427,11 +12035,6 @@ goog.exportProperty(
     ol.geom.LinearRing.prototype.un);
 
 goog.exportProperty(
-    ol.geom.LinearRing.prototype,
-    'unByKey',
-    ol.geom.LinearRing.prototype.unByKey);
-
-goog.exportProperty(
     ol.geom.LineString.prototype,
     'getFirstCoordinate',
     ol.geom.LineString.prototype.getFirstCoordinate);
@@ -12540,11 +12143,6 @@ goog.exportProperty(
     ol.geom.LineString.prototype,
     'un',
     ol.geom.LineString.prototype.un);
-
-goog.exportProperty(
-    ol.geom.LineString.prototype,
-    'unByKey',
-    ol.geom.LineString.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.MultiLineString.prototype,
@@ -12657,11 +12255,6 @@ goog.exportProperty(
     ol.geom.MultiLineString.prototype.un);
 
 goog.exportProperty(
-    ol.geom.MultiLineString.prototype,
-    'unByKey',
-    ol.geom.MultiLineString.prototype.unByKey);
-
-goog.exportProperty(
     ol.geom.MultiPoint.prototype,
     'getFirstCoordinate',
     ol.geom.MultiPoint.prototype.getFirstCoordinate);
@@ -12770,11 +12363,6 @@ goog.exportProperty(
     ol.geom.MultiPoint.prototype,
     'un',
     ol.geom.MultiPoint.prototype.un);
-
-goog.exportProperty(
-    ol.geom.MultiPoint.prototype,
-    'unByKey',
-    ol.geom.MultiPoint.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.MultiPolygon.prototype,
@@ -12887,11 +12475,6 @@ goog.exportProperty(
     ol.geom.MultiPolygon.prototype.un);
 
 goog.exportProperty(
-    ol.geom.MultiPolygon.prototype,
-    'unByKey',
-    ol.geom.MultiPolygon.prototype.unByKey);
-
-goog.exportProperty(
     ol.geom.Point.prototype,
     'getFirstCoordinate',
     ol.geom.Point.prototype.getFirstCoordinate);
@@ -13000,11 +12583,6 @@ goog.exportProperty(
     ol.geom.Point.prototype,
     'un',
     ol.geom.Point.prototype.un);
-
-goog.exportProperty(
-    ol.geom.Point.prototype,
-    'unByKey',
-    ol.geom.Point.prototype.unByKey);
 
 goog.exportProperty(
     ol.geom.Polygon.prototype,
@@ -13117,11 +12695,6 @@ goog.exportProperty(
     ol.geom.Polygon.prototype.un);
 
 goog.exportProperty(
-    ol.geom.Polygon.prototype,
-    'unByKey',
-    ol.geom.Polygon.prototype.unByKey);
-
-goog.exportProperty(
     ol.format.GML.prototype,
     'readFeatures',
     ol.format.GML.prototype.readFeatures);
@@ -13195,11 +12768,6 @@ goog.exportProperty(
     ol.control.Control.prototype,
     'un',
     ol.control.Control.prototype.un);
-
-goog.exportProperty(
-    ol.control.Control.prototype,
-    'unByKey',
-    ol.control.Control.prototype.unByKey);
 
 goog.exportProperty(
     ol.control.Attribution.prototype,
@@ -13277,11 +12845,6 @@ goog.exportProperty(
     ol.control.Attribution.prototype.un);
 
 goog.exportProperty(
-    ol.control.Attribution.prototype,
-    'unByKey',
-    ol.control.Attribution.prototype.unByKey);
-
-goog.exportProperty(
     ol.control.FullScreen.prototype,
     'getMap',
     ol.control.FullScreen.prototype.getMap);
@@ -13355,11 +12918,6 @@ goog.exportProperty(
     ol.control.FullScreen.prototype,
     'un',
     ol.control.FullScreen.prototype.un);
-
-goog.exportProperty(
-    ol.control.FullScreen.prototype,
-    'unByKey',
-    ol.control.FullScreen.prototype.unByKey);
 
 goog.exportProperty(
     ol.control.MousePosition.prototype,
@@ -13437,11 +12995,6 @@ goog.exportProperty(
     ol.control.MousePosition.prototype.un);
 
 goog.exportProperty(
-    ol.control.MousePosition.prototype,
-    'unByKey',
-    ol.control.MousePosition.prototype.unByKey);
-
-goog.exportProperty(
     ol.control.OverviewMap.prototype,
     'getMap',
     ol.control.OverviewMap.prototype.getMap);
@@ -13515,11 +13068,6 @@ goog.exportProperty(
     ol.control.OverviewMap.prototype,
     'un',
     ol.control.OverviewMap.prototype.un);
-
-goog.exportProperty(
-    ol.control.OverviewMap.prototype,
-    'unByKey',
-    ol.control.OverviewMap.prototype.unByKey);
 
 goog.exportProperty(
     ol.control.Rotate.prototype,
@@ -13597,11 +13145,6 @@ goog.exportProperty(
     ol.control.Rotate.prototype.un);
 
 goog.exportProperty(
-    ol.control.Rotate.prototype,
-    'unByKey',
-    ol.control.Rotate.prototype.unByKey);
-
-goog.exportProperty(
     ol.control.ScaleLine.prototype,
     'getMap',
     ol.control.ScaleLine.prototype.getMap);
@@ -13675,11 +13218,6 @@ goog.exportProperty(
     ol.control.ScaleLine.prototype,
     'un',
     ol.control.ScaleLine.prototype.un);
-
-goog.exportProperty(
-    ol.control.ScaleLine.prototype,
-    'unByKey',
-    ol.control.ScaleLine.prototype.unByKey);
 
 goog.exportProperty(
     ol.control.Zoom.prototype,
@@ -13757,11 +13295,6 @@ goog.exportProperty(
     ol.control.Zoom.prototype.un);
 
 goog.exportProperty(
-    ol.control.Zoom.prototype,
-    'unByKey',
-    ol.control.Zoom.prototype.unByKey);
-
-goog.exportProperty(
     ol.control.ZoomSlider.prototype,
     'getMap',
     ol.control.ZoomSlider.prototype.getMap);
@@ -13837,11 +13370,6 @@ goog.exportProperty(
     ol.control.ZoomSlider.prototype.un);
 
 goog.exportProperty(
-    ol.control.ZoomSlider.prototype,
-    'unByKey',
-    ol.control.ZoomSlider.prototype.unByKey);
-
-goog.exportProperty(
     ol.control.ZoomToExtent.prototype,
     'getMap',
     ol.control.ZoomToExtent.prototype.getMap);
@@ -13915,8 +13443,3 @@ goog.exportProperty(
     ol.control.ZoomToExtent.prototype,
     'un',
     ol.control.ZoomToExtent.prototype.un);
-
-goog.exportProperty(
-    ol.control.ZoomToExtent.prototype,
-    'unByKey',
-    ol.control.ZoomToExtent.prototype.unByKey);
