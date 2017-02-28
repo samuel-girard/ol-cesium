@@ -1,6 +1,6 @@
 // Ol-Cesium. See https://github.com/openlayers/ol-cesium/
 // License: https://github.com/openlayers/ol-cesium/blob/master/LICENSE
-// Version: v1.24-13-gdea327c
+// Version: v1.24-15-g5102cdc
 
 (function(){'use strict';var k,aa=this;function ba(){}
 function ca(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
