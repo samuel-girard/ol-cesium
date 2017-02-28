@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>OL-Cesium API Documentation - Source: src/core.js</title>
+    <title>OL-Cesium API Documentation - Source: src/olcesium.js</title>
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
     <script src="scripts/jquery.min.js"> </script>
@@ -439,552 +439,706 @@
     </ul>
 </div>
     <div class="main">
-        <h1 class="page-title" data-filename="src_core.js.html">Source: src/core.js</h1>
+        <h1 class="page-title" data-filename="src_olcesium.js.html">Source: src/olcesium.js</h1>
         
 
 
     
     <section>
         <article>
-            <pre class="prettyprint source"><code>goog.provide('olcs.core');
+            <pre class="prettyprint source"><code>goog.provide('olcs.OLCesium');
 
-goog.require('goog.Promise');
 goog.require('goog.asserts');
-goog.require('goog.async.AnimationDelay');
-goog.require('ol.layer.Tile');
 goog.require('ol.proj');
-goog.require('ol.source.TileImage');
-goog.require('ol.source.WMTS');
-goog.require('olcs.core.OLImageryProvider');
 
-// Initialize rejection handler.
-// Do nothing on rejected promise, like with standard Promises.
-goog.Promise.setUnhandledRejectionHandler(function() {});
+goog.require('olcs.util');
+goog.require('olcs.core');
+goog.require('olcs.AutoRenderLoop');
+goog.require('olcs.Camera');
+goog.require('olcs.RasterSynchronizer');
+goog.require('olcs.VectorSynchronizer');
+
 
 
 /**
- * Compute the pixel width and height of a point in meters using the
- * camera frustum.
- * @param {!Cesium.Scene} scene
- * @param {!Cesium.Cartesian3} target
- * @return {!Cesium.Cartesian2} the pixel size
+ * @param {!olcsx.OLCesiumOptions} options Options.
+ * @constructor
  * @api
+ * @struct
  */
-olcs.core.computePixelSizeAtCoordinate = function(scene, target) {
-  var camera = scene.camera;
-  var canvas = scene.canvas;
-  var frustum = camera.frustum;
-  var distance = Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(
-      camera.position, target, new Cesium.Cartesian3()));
-  var pixelSize = new Cesium.Cartesian2();
-  return frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight,
-      distance, pixelSize);
-};
-
-
-/**
- * Compute bounding box around a target point.
- * @param {!Cesium.Scene} scene
- * @param {!Cesium.Cartesian3} target
- * @param {number} amount Half the side of the box, in pixels.
- * @return {Array&lt;Cesium.Cartographic>} bottom left and top right
- * coordinates of the box
- */
-olcs.core.computeBoundingBoxAtTarget = function(scene, target, amount) {
-  var pixelSize = olcs.core.computePixelSizeAtCoordinate(scene, target);
-  var transform = Cesium.Transforms.eastNorthUpToFixedFrame(target);
-
-  var bottomLeft = Cesium.Matrix4.multiplyByPoint(
-      transform,
-      new Cesium.Cartesian3(-pixelSize.x * amount, -pixelSize.y * amount, 0),
-      new Cesium.Cartesian3());
-
-  var topRight = Cesium.Matrix4.multiplyByPoint(
-      transform,
-      new Cesium.Cartesian3(pixelSize.x * amount, pixelSize.y * amount, 0),
-      new Cesium.Cartesian3());
-
-  return Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(
-      [bottomLeft, topRight]);
-};
-
-
-/**
- *
- * @param {!ol.geom.Geometry} geometry
- * @param {number} height
- * @api
- */
-olcs.core.applyHeightOffsetToGeometry = function(geometry, height) {
-  geometry.applyTransform(function(input, output, stride) {
-    goog.asserts.assert(input === output);
-    if (stride !== undefined &amp;&amp; stride >= 3) {
-      for (var i = 0; i &lt; output.length; i += stride) {
-        output[i + 2] = output[i + 2] + height;
-      }
-    }
-    return output;
-  });
-};
-
-
-/**
- * @param {!Cesium.Camera} camera
- * @param {number} angle
- * @param {!Cesium.Cartesian3} axis
- * @param {!Cesium.Matrix4} transform
- * @param {olcsx.core.RotateAroundAxisOption=} opt_options
- * @return {goog.Promise}
- * @api
- */
-olcs.core.rotateAroundAxis = function(camera, angle, axis, transform,
-    opt_options) {
-  var clamp = Cesium.Math.clamp;
-  var defaultValue = Cesium.defaultValue;
-
-  var options = opt_options || {};
-  var duration = defaultValue(options.duration, 500); // ms
-  var easing = defaultValue(options.easing, ol.easing.linear);
-  var callback = options.callback;
-
-  var start = Date.now();
-  var lastProgress = 0;
-  var oldTransform = new Cesium.Matrix4();
-
-  return new goog.Promise(function(resolve, reject) {
-    var animation = new goog.async.AnimationDelay(function(millis) {
-      var progress = easing(clamp((millis - start) / duration, 0, 1));
-      goog.asserts.assert(progress > lastProgress);
-
-      camera.transform.clone(oldTransform);
-      var stepAngle = (progress - lastProgress) * angle;
-      lastProgress = progress;
-      camera.lookAtTransform(transform);
-      camera.rotate(axis, stepAngle);
-      camera.lookAtTransform(oldTransform);
-
-      if (progress &lt; 1) {
-        animation.start();
-      } else {
-        if (callback) {
-          callback();
-        }
-        resolve();
-      }
-    });
-    animation.start();
-  });
-};
-
-
-/**
- * @param {!Cesium.Scene} scene
- * @param {number} heading
- * @param {!Cesium.Cartesian3} bottomCenter
- * @param {olcsx.core.RotateAroundAxisOption=} opt_options
- * @api
- */
-olcs.core.setHeadingUsingBottomCenter = function(scene, heading,
-    bottomCenter, opt_options) {
-  var camera = scene.camera;
-  // Compute the camera position to zenith quaternion
-  var angleToZenith = olcs.core.computeAngleToZenith(scene, bottomCenter);
-  var axis = camera.right;
-  var quaternion = Cesium.Quaternion.fromAxisAngle(axis, angleToZenith);
-  var rotation = Cesium.Matrix3.fromQuaternion(quaternion);
-
-  // Get the zenith point from the rotation of the position vector
-  var vector = new Cesium.Cartesian3();
-  Cesium.Cartesian3.subtract(camera.position, bottomCenter, vector);
-  var zenith = new Cesium.Cartesian3();
-  Cesium.Matrix3.multiplyByVector(rotation, vector, zenith);
-  Cesium.Cartesian3.add(zenith, bottomCenter, zenith);
-
-  // Actually rotate around the zenith normal
-  var transform = Cesium.Matrix4.fromTranslation(zenith);
-  var rotateAroundAxis = olcs.core.rotateAroundAxis;
-  rotateAroundAxis(camera, heading, zenith, transform, opt_options);
-};
-
-
-/**
- * Get the 3D position of the given pixel of the canvas.
- * @param {!Cesium.Scene} scene
- * @param {!Cesium.Cartesian2} pixel
- * @return {!Cesium.Cartesian3|undefined}
- * @api
- */
-olcs.core.pickOnTerrainOrEllipsoid = function(scene, pixel) {
-  var ray = scene.camera.getPickRay(pixel);
-  var target = scene.globe.pick(ray, scene);
-  return target || scene.camera.pickEllipsoid(pixel);
-};
-
-
-/**
- * Get the 3D position of the point at the bottom-center of the screen.
- * @param {!Cesium.Scene} scene
- * @return {!Cesium.Cartesian3|undefined}
- * @api
- */
-olcs.core.pickBottomPoint = function(scene) {
-  var canvas = scene.canvas;
-  var bottom = new Cesium.Cartesian2(
-      canvas.clientWidth / 2, canvas.clientHeight);
-  return olcs.core.pickOnTerrainOrEllipsoid(scene, bottom);
-};
-
-
-/**
- * Get the 3D position of the point at the center of the screen.
- * @param {!Cesium.Scene} scene
- * @return {!Cesium.Cartesian3|undefined}
- * @api
- */
-olcs.core.pickCenterPoint = function(scene) {
-  var canvas = scene.canvas;
-  var center = new Cesium.Cartesian2(
-      canvas.clientWidth / 2,
-      canvas.clientHeight / 2);
-  return olcs.core.pickOnTerrainOrEllipsoid(scene, center);
-};
-
-
-/**
- * Compute the signed tilt angle on globe, between the opposite of the
- * camera direction and the target normal. Return undefined if there is no
- * intersection of the camera direction with the globe.
- * @param {!Cesium.Scene} scene
- * @return {number|undefined}
- * @api
- */
-olcs.core.computeSignedTiltAngleOnGlobe = function(scene) {
-  var camera = scene.camera;
-  var ray = new Cesium.Ray(camera.position, camera.direction);
-  var target = scene.globe.pick(ray, scene);
-
-  if (!target) {
-    // no tiles in the area were loaded?
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var obj = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
-    if (obj) {
-      target = Cesium.Ray.getPoint(ray, obj.start);
-    }
-  }
-
-  if (!target) {
-    return undefined;
-  }
-
-  var normal = new Cesium.Cartesian3();
-  Cesium.Ellipsoid.WGS84.geocentricSurfaceNormal(target, normal);
-
-  var angleBetween = olcs.core.signedAngleBetween;
-  var angle = angleBetween(camera.direction, normal, camera.right) - Math.PI;
-  return Cesium.Math.convertLongitudeRange(angle);
-};
-
-
-/**
- * Compute the ray from the camera to the bottom-center of the screen.
- * @param {!Cesium.Scene} scene
- * @return {!Cesium.Ray}
- */
-olcs.core.bottomFovRay = function(scene) {
-  var camera = scene.camera;
-  var fovy2 = camera.frustum.fovy / 2;
-  var direction = camera.direction;
-  var rotation = Cesium.Quaternion.fromAxisAngle(camera.right, fovy2);
-  var matrix = Cesium.Matrix3.fromQuaternion(rotation);
-  var vector = new Cesium.Cartesian3();
-  Cesium.Matrix3.multiplyByVector(matrix, direction, vector);
-  return new Cesium.Ray(camera.position, vector);
-};
-
-
-/**
- * Compute the angle between two Cartesian3.
- * @param {!Cesium.Cartesian3} first
- * @param {!Cesium.Cartesian3} second
- * @param {!Cesium.Cartesian3} normal Normal to test orientation against.
- * @return {number}
- */
-olcs.core.signedAngleBetween = function(first, second, normal) {
-  // We are using the dot for the angle.
-  // Then the cross and the dot for the sign.
-  var a = new Cesium.Cartesian3();
-  var b = new Cesium.Cartesian3();
-  var c = new Cesium.Cartesian3();
-  Cesium.Cartesian3.normalize(first, a);
-  Cesium.Cartesian3.normalize(second, b);
-  Cesium.Cartesian3.cross(a, b, c);
-
-  var cosine = Cesium.Cartesian3.dot(a, b);
-  var sine = Cesium.Cartesian3.magnitude(c);
-
-  // Sign of the vector product and the orientation normal
-  var sign = Cesium.Cartesian3.dot(normal, c);
-  var angle = Math.atan2(sine, cosine);
-  return sign >= 0 ? angle : -angle;
-};
-
-
-/**
- * Compute the rotation angle around a given point, needed to reach the
- * zenith position.
- * At a zenith position, the camera direction is going througth the earth
- * center and the frustrum bottom ray is going through the chosen pivot
- * point.
- * The bottom-center of the screen is a good candidate for the pivot point.
- * @param {!Cesium.Scene} scene
- * @param {!Cesium.Cartesian3} pivot Point around which the camera rotates.
- * @return {number}
- * @api
- */
-olcs.core.computeAngleToZenith = function(scene, pivot) {
-  // This angle is the sum of the angles 'fy' and 'a', which are defined
-  // using the pivot point and its surface normal.
-  //        Zenith |    camera
-  //           \   |   /
-  //            \fy|  /
-  //             \ |a/
-  //              \|/pivot
-  var camera = scene.camera;
-  var fy = camera.frustum.fovy / 2;
-  var ray = olcs.core.bottomFovRay(scene);
-  var direction = Cesium.Cartesian3.clone(ray.direction);
-  Cesium.Cartesian3.negate(direction, direction);
-
-  var normal = new Cesium.Cartesian3();
-  Cesium.Ellipsoid.WGS84.geocentricSurfaceNormal(pivot, normal);
-
-  var left = new Cesium.Cartesian3();
-  Cesium.Cartesian3.negate(camera.right, left);
-
-  var a = olcs.core.signedAngleBetween(normal, direction, left);
-  return a + fy;
-};
-
-
-/**
- * Rotate the camera so that its direction goes through the target point.
- * If a globe is given, the target height is first interpolated from terrain.
- * @param {!Cesium.Camera} camera
- * @param {!Cesium.Cartographic} target
- * @param {Cesium.Globe=} opt_globe
- * @api
- */
-olcs.core.lookAt = function(camera, target, opt_globe) {
-  if (opt_globe) {
-    var height = opt_globe.getHeight(target);
-    target.height = height || 0;
-  }
-
-  var ellipsoid = Cesium.Ellipsoid.WGS84;
-  var targetb = ellipsoid.cartographicToCartesian(target);
-
-  var position = camera.position;
-  var up = new Cesium.Cartesian3();
-  ellipsoid.geocentricSurfaceNormal(position, up);
-
-  camera.lookAt(position, targetb, up);
-};
-
-
-/**
- * Convert an OpenLayers extent to a Cesium rectangle.
- * @param {ol.Extent} extent Extent.
- * @param {ol.ProjectionLike} projection Extent projection.
- * @return {Cesium.Rectangle} The corresponding Cesium rectangle.
- * @api
- */
-olcs.core.extentToRectangle = function(extent, projection) {
-  if (extent &amp;&amp; projection) {
-    var ext = ol.proj.transformExtent(extent, projection, 'EPSG:4326');
-    return Cesium.Rectangle.fromDegrees(ext[0], ext[1], ext[2], ext[3]);
-  } else {
-    return null;
-  }
-};
-
-
-/**
- * Creates Cesium.ImageryLayer best corresponding to the given ol.layer.Layer.
- * Only supports raster layers
- * @param {!ol.layer.Base} olLayer
- * @param {?ol.proj.Projection} viewProj Projection of the view.
- * @return {?Cesium.ImageryLayer} null if not possible (or supported)
- * @api
- */
-olcs.core.tileLayerToImageryLayer = function(olLayer, viewProj) {
-  if (!(olLayer instanceof ol.layer.Tile)) {
-    return null;
-  }
-
-  var provider = null;
-
-  var source = olLayer.getSource();
-  // handle special cases before the general synchronization
-  if (source instanceof ol.source.WMTS) {
-    // WMTS uses different TileGrid which is not currently supported
-    return null;
-  }
-  if (source instanceof ol.source.TileImage) {
-    var projection = source.getProjection();
-
-    if (!projection) {
-      // if not explicit, assume the same projection as view
-      projection = viewProj;
-    } else if (projection !== viewProj) {
-      return null; // do not sync layers with projections different than view
-    }
-
-    var is3857 = projection === ol.proj.get('EPSG:3857');
-    var is4326 = projection === ol.proj.get('EPSG:4326');
-    if (is3857 || is4326) {
-      provider = new olcs.core.OLImageryProvider(source, viewProj);
-    } else {
-      return null;
-    }
-  } else {
-    // sources other than TileImage are currently not supported
-    return null;
-  }
-
-  // the provider is always non-null if we got this far
-
-  var layerOptions = {};
-
-  var ext = olLayer.getExtent();
-  if (ext &amp;&amp; viewProj) {
-    layerOptions.rectangle = olcs.core.extentToRectangle(ext, viewProj);
-  }
-
-  var cesiumLayer = new Cesium.ImageryLayer(provider, layerOptions);
-  return cesiumLayer;
-};
-
-
-/**
- * Synchronizes the layer rendering properties (opacity, visible)
- * to the given Cesium ImageryLayer.
- * @param {!ol.layer.Base} olLayer
- * @param {!Cesium.ImageryLayer} csLayer
- * @api
- */
-olcs.core.updateCesiumLayerProperties = function(olLayer, csLayer) {
-  var opacity = olLayer.getOpacity();
-  if (opacity !== undefined) {
-    csLayer.alpha = opacity;
-  }
-  var visible = olLayer.getVisible();
-  if (visible !== undefined) {
-    csLayer.show = visible;
-  }
-};
-
-
-/**
- * Convert a 2D or 3D OpenLayers coordinate to Cesium.
- * @param {ol.Coordinate} coordinate Ol3 coordinate.
- * @return {!Cesium.Cartesian3} Cesium cartesian coordinate
- * @api
- */
-olcs.core.ol4326CoordinateToCesiumCartesian = function(coordinate) {
-  var coo = coordinate;
-  return coo.length > 2 ?
-      Cesium.Cartesian3.fromDegrees(coo[0], coo[1], coo[2]) :
-      Cesium.Cartesian3.fromDegrees(coo[0], coo[1]);
-};
-
-
-/**
- * Convert an array of 2D or 3D OpenLayers coordinates to Cesium.
- * @param {Array.&lt;!ol.Coordinate>} coordinates Ol3 coordinates.
- * @return {!Array.&lt;Cesium.Cartesian3>} Cesium cartesian coordinates
- * @api
- */
-olcs.core.ol4326CoordinateArrayToCsCartesians = function(coordinates) {
-  goog.asserts.assert(coordinates !== null);
-  var toCartesian = olcs.core.ol4326CoordinateToCesiumCartesian;
-  var cartesians = [];
-  for (var i = 0; i &lt; coordinates.length; ++i) {
-    cartesians.push(toCartesian(coordinates[i]));
-  }
-  return cartesians;
-};
-
-
-/**
- * Reproject an OpenLayers geometry to EPSG:4326 if needed.
- * The geometry will be cloned only when original projection is not EPSG:4326
- * and the properties will be shallow copied.
- * @param {!T} geometry
- * @param {!ol.ProjectionLike} projection
- * @return {!T}
- * @template T
- * @api
- */
-olcs.core.olGeometryCloneTo4326 = function(geometry, projection) {
-  goog.asserts.assert(projection);
-
-  var proj4326 = ol.proj.get('EPSG:4326');
-  var proj = ol.proj.get(projection);
-  if (proj !== proj4326) {
-    var properties = geometry.getProperties();
-    geometry = geometry.clone();
-    geometry.transform(proj, proj4326);
-    geometry.setProperties(properties);
-  }
-  return geometry;
-};
-
-
-/**
- * Convert an OpenLayers color to Cesium.
- * @param {ol.Color|CanvasGradient|CanvasPattern|string} olColor
- * @return {!Cesium.Color}
- * @api
- */
-olcs.core.convertColorToCesium = function(olColor) {
-  olColor = olColor || 'black';
-  if (Array.isArray(olColor)) {
-    return new Cesium.Color(
-        Cesium.Color.byteToFloat(olColor[0]),
-        Cesium.Color.byteToFloat(olColor[1]),
-        Cesium.Color.byteToFloat(olColor[2]),
-        olColor[3]
-    );
-  } else if (typeof olColor == 'string') {
-    return Cesium.Color.fromCssColorString(olColor);
-  }
-  goog.asserts.fail('impossible');
-};
-
-
-/**
- * Convert an OpenLayers url to Cesium.
- * @param {string} url
- * @return {!olcsx.core.CesiumUrlDefinition}
- * @api
- */
-olcs.core.convertUrlToCesium = function(url) {
-  var subdomains = '';
-  var re = /\{(\d|[a-z])-(\d|[a-z])\}/;
-  var match = re.exec(url);
-  if (match) {
-    url = url.replace(re, '{s}');
-    var startCharCode = match[1].charCodeAt(0);
-    var stopCharCode = match[2].charCodeAt(0);
-    var charCode;
-    for (charCode = startCharCode; charCode &lt;= stopCharCode; ++charCode) {
-      subdomains += String.fromCharCode(charCode);
-    }
-  }
-  return {
-    url: url,
-    subdomains: subdomains
+olcs.OLCesium = function(options) {
+
+  /**
+   * @type {olcs.AutoRenderLoop}
+   * @private
+   */
+  this.autoRenderLoop_ = null;
+
+  /**
+   * @type {!ol.Map}
+   * @private
+   */
+  this.map_ = options.map;
+
+  /**
+   * @type {!function(): Cesium.JulianDate}
+   * @private
+   */
+  this.time_ = options.time || function() {
+    return Cesium.JulianDate.now();
   };
+
+  /**
+   * No change of the view projection.
+   * @private
+   */
+  this.to4326Transform_ = ol.proj.getTransform(this.map_.getView().getProjection(), 'EPSG:4326');
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.resolutionScale_ = 1.0;
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.canvasClientWidth_ = 0.0;
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.canvasClientHeight_ = 0.0;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.resolutionScaleChanged_ = true; // force resize
+
+  var fillArea = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+
+  /**
+   * @type {!Element}
+   * @private
+   */
+  this.container_ = document.createElement('DIV');
+  var containerAttribute = document.createAttribute('style');
+  containerAttribute.value = fillArea + 'visibility:hidden;';
+  this.container_.setAttributeNode(containerAttribute);
+
+  var targetElement = options.target || null;
+  if (targetElement) {
+    if (typeof targetElement === 'string') {
+      targetElement = document.getElementById(targetElement);
+    }
+    targetElement.appendChild(this.container_);
+  } else {
+    var oc = this.map_.getViewport().querySelector('.ol-overlaycontainer');
+    if (oc &amp;&amp; oc.parentNode) {
+      oc.parentNode.insertBefore(this.container_, oc);
+    }
+  }
+
+  /**
+   * Whether the Cesium container is placed over the ol map.
+   * @type {boolean}
+   * @private
+   */
+  this.isOverMap_ = !targetElement;
+
+  /**
+   * @type {!HTMLCanvasElement}
+   * @private
+   */
+  this.canvas_ = /** @type {!HTMLCanvasElement} */ (
+      document.createElement('CANVAS'));
+  var canvasAttribute = document.createAttribute('style');
+  canvasAttribute.value = fillArea;
+  this.canvas_.setAttributeNode(canvasAttribute);
+
+  if (olcs.util.supportsImageRenderingPixelated()) {
+    // non standard CSS4
+    this.canvas_.style['imageRendering'] = olcs.util.imageRenderingValue();
+  }
+
+  this.canvas_.oncontextmenu = function() { return false; };
+  this.canvas_.onselectstart = function() { return false; };
+
+  this.container_.appendChild(this.canvas_);
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.enabled_ = false;
+
+  /**
+   * @type {!Array.&lt;ol.interaction.Interaction>}
+   * @private
+   */
+  this.pausedInteractions_ = [];
+
+  /**
+   * @type {?ol.layer.Group}
+   * @private
+   */
+  this.hiddenRootGroup_ = null;
+
+  var sceneOptions = options.sceneOptions !== undefined ? options.sceneOptions :
+      /** @type {Cesium.SceneOptions} */ ({});
+  sceneOptions.canvas = this.canvas_;
+  sceneOptions.scene3DOnly = true;
+
+  /**
+   * @type {!Cesium.Scene}
+   * @private
+   */
+  this.scene_ = new Cesium.Scene(sceneOptions);
+
+  var sscc = this.scene_.screenSpaceCameraController;
+
+  sscc.tiltEventTypes.push({
+    'eventType': Cesium.CameraEventType.LEFT_DRAG,
+    'modifier': Cesium.KeyboardEventModifier.SHIFT
+  });
+
+  sscc.tiltEventTypes.push({
+    'eventType': Cesium.CameraEventType.LEFT_DRAG,
+    'modifier': Cesium.KeyboardEventModifier.ALT
+  });
+
+  sscc.enableLook = false;
+
+  this.scene_.camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+
+  /**
+   * @type {!olcs.Camera}
+   * @private
+   */
+  this.camera_ = new olcs.Camera(this.scene_, this.map_);
+
+  /**
+   * @type {!Cesium.Globe}
+   * @private
+   */
+  this.globe_ = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
+  this.globe_.baseColor = Cesium.Color.WHITE;
+  this.scene_.globe = this.globe_;
+  this.scene_.skyAtmosphere = new Cesium.SkyAtmosphere();
+
+  this.dataSourceCollection_ = new Cesium.DataSourceCollection();
+  this.dataSourceDisplay_ = new Cesium.DataSourceDisplay({
+    scene: this.scene_,
+    dataSourceCollection: this.dataSourceCollection_
+  });
+
+  var synchronizers = options.createSynchronizers ?
+      options.createSynchronizers(this.map_, this.scene_, this.dataSourceCollection_) : [
+        new olcs.RasterSynchronizer(this.map_, this.scene_),
+        new olcs.VectorSynchronizer(this.map_, this.scene_)
+      ];
+
+  // Assures correct canvas size after initialisation
+  this.handleResize_();
+
+  for (var i = synchronizers.length - 1; i >= 0; --i) {
+    synchronizers[i].synchronize();
+  }
+
+  if (this.isOverMap_) {
+    // if in "stacked mode", hide everything except canvas (including credits)
+    var credits = this.canvas_.nextElementSibling;
+    if (credits) {
+      credits.style.display = 'none';
+    }
+  }
+
+  /**
+   * Time of the last rendered frame, as returned by `performance.now()`.
+   * @type {number}
+   * @private
+   */
+  this.lastFrameTime_ = 0;
+
+  /**
+   * The identifier returned by `requestAnimationFrame`.
+   * @type {number|undefined}
+   * @private
+   */
+  this.renderId_ = undefined;
+
+  /**
+   * Target frame rate for the render loop.
+   * @type {number}
+   * @private
+   */
+  this.targetFrameRate_ = Number.POSITIVE_INFINITY;
+
+  /**
+   * If the Cesium render loop is being blocked.
+   * @type {boolean}
+   * @private
+   */
+  this.blockCesiumRendering_ = false;
+
+  /**
+   * If the warmup routine is active.
+   * @type {boolean}
+   * @private
+   */
+  this.warmingUp_ = false;
+
+  /**
+   * @type {ol.Feature}
+   * @private
+   */
+  this.trackedFeature_ = null;
+
+  /**
+   * @type {Cesium.Entity}
+   * @private
+   */
+  this.trackedEntity_ = null;
+
+  /**
+   * @type {Cesium.EntityView}
+   * @private
+   */
+  this.entityView_ = null;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.needTrackedEntityUpdate_ = false;
+
+  /**
+   * @type {!Cesium.BoundingSphere}
+   */
+  this.boundingSphereScratch_ = new Cesium.BoundingSphere();
+
+  var eventHelper = new Cesium.EventHelper();
+  eventHelper.add(this.scene_.postRender, olcs.OLCesium.prototype.updateTrackedEntity_, this);
+};
+
+
+Object.defineProperties(olcs.OLCesium.prototype, {
+  'trackedFeature': {
+    'get': /** @this {olcs.OLCesium} */ function() {
+      return this.trackedFeature_;
+    },
+    'set': /** @this {olcs.OLCesium} */ function(feature) {
+      if (this.trackedFeature_ !== feature) {
+
+        var scene = this.scene_;
+
+        //Stop tracking
+        if (!feature || !feature.getGeometry()) {
+          this.needTrackedEntityUpdate_ = false;
+          scene.screenSpaceCameraController.enableTilt = true;
+
+          if (this.trackedEntity_) {
+            this.dataSourceDisplay_.defaultDataSource.entities.remove(this.trackedEntity_);
+          }
+          this.trackedEntity_ = null;
+          this.trackedFeature_ = null;
+          this.entityView_ = null;
+          scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+          return;
+        }
+
+        this.trackedFeature_ = feature;
+
+        //We can't start tracking immediately, so we set a flag and start tracking
+        //when the bounding sphere is ready (most likely next frame).
+        this.needTrackedEntityUpdate_ = true;
+
+        var to4326Transform = this.to4326Transform_;
+        var toCesiumPosition = function() {
+          var geometry = feature.getGeometry();
+          goog.asserts.assertInstanceof(geometry, ol.geom.Point);
+          var coo = geometry.getCoordinates();
+          var coo4326 = to4326Transform(coo, undefined, coo.length);
+          return olcs.core.ol4326CoordinateToCesiumCartesian(coo4326);
+        };
+
+        // Create an invisible point entity for tracking.
+        // It is independant from the primitive/geometry created by the vector synchronizer.
+        var options = {
+          'position': new Cesium.CallbackProperty(function(time, result) {
+            return toCesiumPosition();
+          }, false),
+          'point': {
+            'pixelSize': 1,
+            'color': Cesium.Color.TRANSPARENT
+          }
+        };
+
+        this.trackedEntity_ = this.dataSourceDisplay_.defaultDataSource.entities.add(options);
+      }
+    }
+  }
+});
+
+
+/**
+ * Render the Cesium scene.
+ * @private
+ */
+olcs.OLCesium.prototype.render_ = function() {
+  // if a call to `requestAnimationFrame` is pending, cancel it
+  if (this.renderId_ !== undefined) {
+    cancelAnimationFrame(this.renderId_);
+    this.renderId_ = undefined;
+  }
+
+  // only render if Cesium is enabled/warming and rendering hasn't been blocked
+  if ((this.enabled_ || this.warmingUp_) &amp;&amp; !this.blockCesiumRendering_) {
+    this.renderId_ = requestAnimationFrame(this.onAnimationFrame_.bind(this));
+  }
+};
+
+
+/**
+ * Callback for `requestAnimationFrame`.
+ * @param {number} frameTime The frame time, from `performance.now()`.
+ * @private
+ */
+olcs.OLCesium.prototype.onAnimationFrame_ = function(frameTime) {
+  this.renderId_ = undefined;
+
+  // check if a frame was rendered within the target frame rate
+  var interval = 1000.0 / this.targetFrameRate_;
+  var delta = frameTime - this.lastFrameTime_;
+  if (delta &lt; interval) {
+    // too soon, don't render yet
+    this.render_();
+    return;
+  }
+
+  // time to render a frame, save the time
+  this.lastFrameTime_ = frameTime;
+
+  var julianDate = this.time_();
+  this.scene_.initializeFrame();
+  this.handleResize_();
+  this.dataSourceDisplay_.update(julianDate);
+
+  // Update tracked entity
+  if (this.entityView_) {
+    var trackedEntity = this.trackedEntity_;
+    var trackedState = this.dataSourceDisplay_.getBoundingSphere(trackedEntity, false, this.boundingSphereScratch_);
+    if (trackedState === Cesium.BoundingSphereState.DONE) {
+      this.boundingSphereScratch_.radius = 1; // a radius of 1 is enough for tracking points
+      this.entityView_.update(julianDate, this.boundingSphereScratch_);
+    }
+  }
+
+  this.scene_.render(julianDate);
+  this.camera_.checkCameraChange();
+
+  // request the next render call after this one completes to ensure the browser doesn't get backed up
+  this.render_();
+};
+
+
+/**
+ * @private
+ */
+olcs.OLCesium.prototype.updateTrackedEntity_ = function() {
+  if (!this.needTrackedEntityUpdate_) {
+    return;
+  }
+
+  var trackedEntity = this.trackedEntity_;
+  var scene = this.scene_;
+
+  var state = this.dataSourceDisplay_.getBoundingSphere(trackedEntity, false, this.boundingSphereScratch_);
+  if (state === Cesium.BoundingSphereState.PENDING) {
+    return;
+  }
+
+  scene.screenSpaceCameraController.enableTilt = false;
+
+  var bs = state !== Cesium.BoundingSphereState.FAILED ? this.boundingSphereScratch_ : undefined;
+  if (bs) {
+    bs.radius = 1;
+  }
+  this.entityView_ = new Cesium.EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid);
+  this.entityView_.update(this.time_(), bs);
+  this.needTrackedEntityUpdate_ = false;
+};
+
+
+/**
+ * @private
+ */
+olcs.OLCesium.prototype.handleResize_ = function() {
+  var width = this.canvas_.clientWidth;
+  var height = this.canvas_.clientHeight;
+
+  if (width === 0 | height === 0) {
+    // The canvas DOM element is not ready yet.
+    return;
+  }
+
+  if (width === this.canvasClientWidth_ &amp;&amp;
+      height === this.canvasClientHeight_ &amp;&amp;
+      !this.resolutionScaleChanged_) {
+    return;
+  }
+
+  var resolutionScale = this.resolutionScale_;
+  if (!olcs.util.supportsImageRenderingPixelated()) {
+    resolutionScale *= window.devicePixelRatio || 1.0;
+  }
+  this.resolutionScaleChanged_ = false;
+
+  this.canvasClientWidth_ = width;
+  this.canvasClientHeight_ = height;
+
+  width *= resolutionScale;
+  height *= resolutionScale;
+
+  this.canvas_.width = width;
+  this.canvas_.height = height;
+  this.scene_.camera.frustum.aspectRatio = width / height;
+};
+
+
+/**
+ * @return {!olcs.Camera}
+ * @api
+ */
+olcs.OLCesium.prototype.getCamera = function() {
+  return this.camera_;
+};
+
+
+/**
+ * @return {!ol.Map}
+ * @api
+ */
+olcs.OLCesium.prototype.getOlMap = function() {
+  return this.map_;
+};
+
+
+/**
+ * @return {!Cesium.Scene}
+ * @api
+ */
+olcs.OLCesium.prototype.getCesiumScene = function() {
+  return this.scene_;
+};
+
+
+/**
+ * @return {!Cesium.DataSourceCollection}
+ * @api
+ */
+olcs.OLCesium.prototype.getDataSources = function() {
+  return this.dataSourceCollection_;
+};
+
+
+/**
+ * @return {!Cesium.DataSourceDisplay}
+ * @api
+ */
+olcs.OLCesium.prototype.getDataSourceDisplay = function() {
+  return this.dataSourceDisplay_;
+};
+
+
+/**
+ * @return {boolean}
+ * @api
+ */
+olcs.OLCesium.prototype.getEnabled = function() {
+  return this.enabled_;
+};
+
+
+/**
+ * Enables/disables the Cesium.
+ * This modifies the visibility style of the container element.
+ * @param {boolean} enable
+ * @api
+ */
+olcs.OLCesium.prototype.setEnabled = function(enable) {
+  if (this.enabled_ === enable) {
+    return;
+  }
+  this.enabled_ = enable;
+
+  // some Cesium operations are operating with canvas.clientWidth,
+  // so we can't remove it from DOM or even make display:none;
+  this.container_.style.visibility = this.enabled_ ? 'visible' : 'hidden';
+  var interactions;
+  if (this.enabled_) {
+    this.throwOnUnitializedMap_();
+    if (this.isOverMap_) {
+      interactions = this.map_.getInteractions();
+      interactions.forEach(function(el, i, arr) {
+        this.pausedInteractions_.push(el);
+      }, this);
+      interactions.clear();
+
+      var rootGroup = this.map_.getLayerGroup();
+      if (rootGroup.getVisible()) {
+        this.hiddenRootGroup_ = rootGroup;
+        this.hiddenRootGroup_.setVisible(false);
+      }
+    }
+    this.camera_.readFromView();
+    this.render_();
+  } else {
+    if (this.isOverMap_) {
+      interactions = this.map_.getInteractions();
+      this.pausedInteractions_.forEach(function(interaction) {
+        interactions.push(interaction);
+      });
+      this.pausedInteractions_.length = 0;
+
+      if (this.hiddenRootGroup_) {
+        this.hiddenRootGroup_.setVisible(true);
+        this.hiddenRootGroup_ = null;
+      }
+    }
+
+    this.camera_.updateView();
+  }
+};
+
+
+/**
+ * Preload Cesium so that it is ready when transitioning from 2D to 3D.
+ * @param {number} height Target height of the camera
+ * @param {number} timeout Milliseconds after which the warming will stop
+ * @api
+*/
+olcs.OLCesium.prototype.warmUp = function(height, timeout) {
+  if (this.enabled_) {
+    // already enabled
+    return;
+  }
+  this.throwOnUnitializedMap_();
+  this.camera_.readFromView();
+  var ellipsoid = this.globe_.ellipsoid;
+  var csCamera = this.scene_.camera;
+  var position = ellipsoid.cartesianToCartographic(csCamera.position);
+  if (position.height &lt; height) {
+    position.height = height;
+    csCamera.position = ellipsoid.cartographicToCartesian(position);
+  }
+
+  this.warmingUp_ = true;
+  this.render_();
+
+  setTimeout((function() {
+    this.warmingUp_ = false;
+  }).bind(this), timeout);
+};
+
+
+/**
+ * Block Cesium rendering to save resources.
+ * @param {boolean} block True to block.
+ * @api
+*/
+olcs.OLCesium.prototype.setBlockCesiumRendering = function(block) {
+  if (this.blockCesiumRendering_ !== block) {
+    this.blockCesiumRendering_ = block;
+
+    // reset the render loop
+    this.render_();
+  }
+};
+
+
+/**
+ * Render the globe only when necessary in order to save resources.
+ * Experimental.
+ * @api
+ */
+olcs.OLCesium.prototype.enableAutoRenderLoop = function() {
+  if (!this.autoRenderLoop_) {
+    this.autoRenderLoop_ = new olcs.AutoRenderLoop(this, false);
+  }
+};
+
+
+/**
+ * Get the autorender loop.
+ * @return {?olcs.AutoRenderLoop}
+ * @api
+*/
+olcs.OLCesium.prototype.getAutoRenderLoop = function() {
+  return this.autoRenderLoop_;
+};
+
+
+/**
+ * The 3D Cesium globe is rendered in a canvas with two different dimensions:
+ * clientWidth and clientHeight which are the dimension on the screen and
+ * width and height which are the dimensions of the drawing buffer.
+ *
+ * By using a resolution scale lower than 1.0, it is possible to render the
+ * globe in a buffer smaller than the canvas client dimensions and improve
+ * performance, at the cost of quality.
+ *
+ * Pixel ratio should also be taken into account; by default, a device with
+ * pixel ratio of 2.0 will have a buffer surface 4 times bigger than the client
+ * surface.
+ *
+ * @param {number} value
+ * @this {olcs.OLCesium}
+ * @api
+ */
+olcs.OLCesium.prototype.setResolutionScale = function(value) {
+  value = Math.max(0, value);
+  if (value !== this.resolutionScale_) {
+    this.resolutionScale_ = Math.max(0, value);
+    this.resolutionScaleChanged_ = true;
+    if (this.autoRenderLoop_) {
+      this.autoRenderLoop_.restartRenderLoop();
+    }
+  }
+};
+
+
+/**
+ * Set the target frame rate for the renderer. Set to `Number.POSITIVE_INFINITY`
+ * to render as quickly as possible.
+ * @param {number} value The frame rate, in frames per second.
+ * @api
+ */
+olcs.OLCesium.prototype.setTargetFrameRate = function(value) {
+  if (this.targetFrameRate_ !== value) {
+    this.targetFrameRate_ = value;
+
+    // reset the render loop
+    this.render_();
+  }
+};
+
+
+/**
+ * Check if OpenLayers map is not properly initialized.
+ * @private
+ */
+olcs.OLCesium.prototype.throwOnUnitializedMap_ = function() {
+  var map = this.map_;
+  var view = map.getView();
+  var center = view.getCenter();
+  if (!view.isDef() || isNaN(center[0]) || isNaN(center[1])) {
+    throw new Error('The OpenLayers map is not properly initialized: ' +
+        center + ' / ' + view.getResolution());
+  }
 };
 </code></pre>
         </article>
