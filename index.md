@@ -4,7 +4,7 @@
 
 <!-- End Navigation buttons -->
 Ol-Cesium
-==========
+=========
 
 OpenLayers - Cesium integration library. Create your map using [OpenLayers](http://openlayers.org/), and visualize it on a globe with [Cesium](http://cesiumjs.org).
 See [live examples](http://openlayers.org/ol-cesium/examples/).
