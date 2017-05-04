@@ -1131,6 +1131,16 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.View.prototype,
+    'getAnimating',
+    ol.View.prototype.getAnimating);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'cancelAnimations',
+    ol.View.prototype.cancelAnimations);
+
+goog.exportProperty(
+    ol.View.prototype,
     'constrainCenter',
     ol.View.prototype.constrainCenter);
 
@@ -1166,6 +1176,26 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.View.prototype,
+    'getMaxZoom',
+    ol.View.prototype.getMaxZoom);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'setMaxZoom',
+    ol.View.prototype.setMaxZoom);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'getMinZoom',
+    ol.View.prototype.getMinZoom);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'setMinZoom',
+    ol.View.prototype.setMinZoom);
+
+goog.exportProperty(
+    ol.View.prototype,
     'getProjection',
     ol.View.prototype.getProjection);
 
@@ -1188,6 +1218,11 @@ goog.exportProperty(
     ol.View.prototype,
     'getZoom',
     ol.View.prototype.getZoom);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'getZoomForResolution',
+    ol.View.prototype.getZoomForResolution);
 
 goog.exportProperty(
     ol.View.prototype,
@@ -1805,6 +1840,11 @@ goog.exportProperty(
 goog.exportSymbol(
     'ol.source.Cluster',
     ol.source.Cluster);
+
+goog.exportProperty(
+    ol.source.Cluster.prototype,
+    'getDistance',
+    ol.source.Cluster.prototype.getDistance);
 
 goog.exportProperty(
     ol.source.Cluster.prototype,
@@ -3880,6 +3920,10 @@ goog.exportProperty(
     ol.format.WFS.prototype,
     'readFeatureCollectionMetadata',
     ol.format.WFS.prototype.readFeatureCollectionMetadata);
+
+goog.exportSymbol(
+    'ol.format.WFS.writeFilter',
+    ol.format.WFS.writeFilter);
 
 goog.exportProperty(
     ol.format.WFS.prototype,
