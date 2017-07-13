@@ -11,23 +11,24 @@ const ol2d = new ol.Map({
   }),
   target: 'map',
   view: new ol.View({
-    center: ol.proj.transform([25, 20], 'EPSG:4326', 'EPSG:3857'),
-    zoom: 3
+    center: [-8382384.16, 4881879.51],
+    zoom: 10
   })
 });
 
 const ol3d = new olcs.OLCesium({map: ol2d});
 const scene = ol3d.getCesiumScene();
+// scene.getGLobe().depthTestAgainstTerrain = true;
 const terrainProvider = new Cesium.CesiumTerrainProvider({
   url: '//assets.agi.com/stk-terrain/world'
 });
 scene.terrainProvider = terrainProvider;
 
-ol3d.getDataSources().add(Cesium.KmlDataSource.load(
-    'https://api3.geo.admin.ch/ogcproxy?url=' +
-  'https%3A%2F%2Fdav0.bgdi.admin.ch%2Fbazl_web%2FActive_Obstacles.kmz', {
+ol3d.getDataSources().add(Cesium.KmlDataSource.load('data/bikeRide.kml', {
+      clampToGround: true,
       camera: scene.camera,
       canvas: scene.canvas
     }
 ));
 
+ol3d.setEnabled(true);
