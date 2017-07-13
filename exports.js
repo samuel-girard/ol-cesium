@@ -67,6 +67,7 @@ goog.require('ol.format.filter.And');
 goog.require('ol.format.filter.Bbox');
 goog.require('ol.format.filter.Comparison');
 goog.require('ol.format.filter.ComparisonBinary');
+goog.require('ol.format.filter.During');
 goog.require('ol.format.filter.EqualTo');
 goog.require('ol.format.filter.Filter');
 goog.require('ol.format.filter.GreaterThan');
@@ -394,6 +395,10 @@ goog.exportSymbol(
 goog.exportSymbol(
     'ol.extent.extend',
     ol.extent.extend);
+
+goog.exportSymbol(
+    'ol.extent.getArea',
+    ol.extent.getArea);
 
 goog.exportSymbol(
     'ol.extent.getBottomLeft',
@@ -1107,6 +1112,16 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.VectorTile.prototype,
+    'getFeatures',
+    ol.VectorTile.prototype.getFeatures);
+
+goog.exportProperty(
+    ol.VectorTile.prototype,
+    'getProjection',
+    ol.VectorTile.prototype.getProjection);
+
+goog.exportProperty(
+    ol.VectorTile.prototype,
     'setFeatures',
     ol.VectorTile.prototype.setFeatures);
 
@@ -1133,6 +1148,11 @@ goog.exportProperty(
     ol.View.prototype,
     'getAnimating',
     ol.View.prototype.getAnimating);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'getInteracting',
+    ol.View.prototype.getInteracting);
 
 goog.exportProperty(
     ol.View.prototype,
@@ -1208,6 +1228,11 @@ goog.exportProperty(
     ol.View.prototype,
     'getResolutions',
     ol.View.prototype.getResolutions);
+
+goog.exportProperty(
+    ol.View.prototype,
+    'getResolutionForExtent',
+    ol.View.prototype.getResolutionForExtent);
 
 goog.exportProperty(
     ol.View.prototype,
@@ -2365,6 +2390,11 @@ goog.exportProperty(
     ol.render.Feature.prototype,
     'getExtent',
     ol.render.Feature.prototype.getExtent);
+
+goog.exportProperty(
+    ol.render.Feature.prototype,
+    'getId',
+    ol.render.Feature.prototype.getId);
 
 goog.exportProperty(
     ol.render.Feature.prototype,
@@ -3618,6 +3648,10 @@ goog.exportSymbol(
     ol.format.filter.like);
 
 goog.exportSymbol(
+    'ol.format.filter.during',
+    ol.format.filter.during);
+
+goog.exportSymbol(
     'ol.format.GeoJSON',
     ol.format.GeoJSON);
 
@@ -4016,6 +4050,10 @@ goog.exportSymbol(
 goog.exportSymbol(
     'ol.format.filter.ComparisonBinary',
     ol.format.filter.ComparisonBinary);
+
+goog.exportSymbol(
+    'ol.format.filter.During',
+    ol.format.filter.During);
 
 goog.exportSymbol(
     'ol.format.filter.EqualTo',
@@ -5177,6 +5215,16 @@ goog.exportProperty(
     ol.Overlay.prototype,
     'un',
     ol.Overlay.prototype.un);
+
+goog.exportProperty(
+    ol.VectorImageTile.prototype,
+    'getTileCoord',
+    ol.VectorImageTile.prototype.getTileCoord);
+
+goog.exportProperty(
+    ol.VectorImageTile.prototype,
+    'load',
+    ol.VectorImageTile.prototype.load);
 
 goog.exportProperty(
     ol.VectorTile.prototype,
