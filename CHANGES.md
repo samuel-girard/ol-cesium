@@ -1,6 +1,6 @@
 # Changelog
 
-# v 1.31
+# v 1.31 - 2017-09-06
 
 * Changes
   * Port to OpenLayers 4.3.2
