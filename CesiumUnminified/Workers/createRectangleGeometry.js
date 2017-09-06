@@ -13605,6 +13605,38 @@ define('Core/AttributeCompression',[
         return result;
     };
 
+    function zigZagDecode(value) {
+        return (value >> 1) ^ (-(value & 1));
+    }
+
+    AttributeCompression.zigZagDeltaDecode = function(uBuffer, vBuffer, heightBuffer) {
+                if (!defined(uBuffer)) {
+            throw new DeveloperError('uBuffer is required.');
+        }
+        if (!defined(vBuffer)) {
+            throw new DeveloperError('vBuffer is required.');
+        }
+        
+        var count = uBuffer.length;
+
+        var u = 0;
+        var v = 0;
+        var height = 0;
+
+        for (var i = 0; i < count; ++i) {
+            u += zigZagDecode(uBuffer[i]);
+            v += zigZagDecode(vBuffer[i]);
+
+            uBuffer[i] = u;
+            vBuffer[i] = v;
+
+            if (defined(heightBuffer)) {
+                height += zigZagDecode(heightBuffer[i]);
+                heightBuffer[i] = height;
+            }
+        }
+    };
+
     return AttributeCompression;
 });
 
