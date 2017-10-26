@@ -1,3 +1,8 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
+
 const point = new ol.geom.Point([700000, 200000, 100000]);
 
 const iconFeature = new ol.Feature({

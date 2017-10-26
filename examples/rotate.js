@@ -1,3 +1,7 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
 
 const map = new ol.Map({
   layers: [

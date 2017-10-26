@@ -1,3 +1,8 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
+
 const ol2d = new ol.Map({
   layers: [
     new ol.layer.Tile({

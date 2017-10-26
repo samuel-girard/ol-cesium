@@ -1,3 +1,8 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
+
 const view = new ol.View({
   center: ol.proj.transform([25, 20], 'EPSG:4326', 'EPSG:3857'),
   zoom: 3,

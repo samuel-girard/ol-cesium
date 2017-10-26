@@ -1,3 +1,8 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
+
 const raster = new ol.layer.Tile({
   source: new ol.source.OSM()
 });

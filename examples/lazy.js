@@ -1,3 +1,9 @@
+/* eslint googshift/valid-provide-and-module: 0 */
+
+
+
+
+
 const ol2d = new ol.Map({
   layers: [
     new ol.layer.Tile({
@@ -17,32 +23,5 @@ const ol2d = new ol.Map({
 });
 
 
-let ol3d;
-
-
-function _doToggle() {
-  ol3d.setEnabled(!ol3d.getEnabled());
-}
-
-
-function toggle3D() { // eslint-disable-line no-unused-vars
-  if (!ol3d) {
-    const s = window.lazyLoadCesium();
-    s.onload = function() {
-      init3D();
-      _doToggle();
-    };
-  } else {
-    _doToggle();
-  }
-}
-
-
-function init3D() {
-  ol3d = new olcs.OLCesium({map: ol2d});
-  const scene = ol3d.getCesiumScene();
-  const terrainProvider = new Cesium.CesiumTerrainProvider({
-    url: '//assets.agi.com/stk-terrain/world'
-  });
-  scene.terrainProvider = terrainProvider;
-}
+// eslint-disable-line no-unused-vars
+window.manager = new olcs.contrib.Manager(window.CESIUM_URL, {map: ol2d});
