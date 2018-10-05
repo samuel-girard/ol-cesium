@@ -3,6 +3,10 @@
  */
 import {get as getProjection} from 'ol/proj.js';
 import olcsUtil from '../util.js';
+import olTileState from 'ol/TileState';
+import {listen, unlistenByKey} from 'ol/events';
+import olEventType from 'ol/events/EventType.js';
+import TileGridTilingScheme from './TileGridTilingScheme.js';
 
 class OLImageryProvider /* should not extend Cesium.ImageryProvider */ {
   /**
@@ -92,15 +96,9 @@ class OLImageryProvider /* should not extend Cesium.ImageryProvider */ {
   handleSourceChanged_(frameState) {
     if (!this.ready_ && this.source_.getState() == 'ready') {
       this.projection_ = olcsUtil.getSourceProjection(this.source_) || this.fallbackProj_;
-      if (this.projection_ == getProjection('EPSG:4326')) {
-        this.tilingScheme_ = new Cesium.GeographicTilingScheme();
-      } else if (this.projection_ == getProjection('EPSG:3857')) {
-        this.tilingScheme_ = new Cesium.WebMercatorTilingScheme();
-      } else {
-        return;
-      }
+      this.tilingScheme_ = new TileGridTilingScheme(this.source_);
       this.rectangle_ = this.tilingScheme_.rectangle;
-
+      // this.credit_ = olcs.core.OLImageryProvider.createCreditForSource(this.source_) || null;
       this.ready_ = true;
     }
   }
@@ -138,25 +136,45 @@ class OLImageryProvider /* should not extend Cesium.ImageryProvider */ {
    * @override
    */
   requestImage(x, y, level) {
-    const tileUrlFunction = this.source_.getTileUrlFunction();
-    if (tileUrlFunction && this.projection_) {
+    var z_ = level;
+    var y_ = -y - 1;
 
-      // Perform mapping of Cesium tile coordinates to OpenLayers tile coordinates:
-      // 1) Cesium zoom level 0 is OpenLayers zoom level 1 for EPSG:4326
-      const z_ = this.tilingScheme_ instanceof Cesium.GeographicTilingScheme ? level + 1 : level;
-      // 2) OpenLayers tile coordinates increase from bottom to top
-      const y_ = -y - 1;
+    var deferred = Cesium.when.defer();
+    var tilegrid = this.source_.getTileGridForProjection(this.projection_);
 
-      let url = tileUrlFunction.call(this.source_,
-          [z_, x, y_], 1, this.projection_);
-      if (this.proxy_) {
-        url = this.proxy_.getURL(url);
-      }
-      return url ? Cesium.ImageryProvider.loadImage(this, url) : this.emptyCanvas_;
-    } else {
-      // return empty canvas to stop Cesium from retrying later
-      return this.emptyCanvas_;
+    if (z_ < tilegrid.getMinZoom() - 1 || z_ > tilegrid.getMaxZoom()) {
+      deferred.resolve(this.emptyCanvas_); // no data
+      return deferred.promise;
     }
+
+    var tile = this.source_.getTile(z_, x, y_, 1, this.projection_);
+    var state = tile.getState();
+
+    if (state === olTileState.EMPTY) {
+      deferred.resolve(this.emptyCanvas_);
+    } else if (state === olTileState.LOADED) {
+      deferred.resolve(tile.getImage());
+    } else if (state === olTileState.ERROR) {
+      deferred.resolve(this.emptyCanvas_);
+    } else {
+      tile.load();
+
+      var unlisten = listen(tile, olEventType.CHANGE, function() {
+        var state = tile.getState();
+        if (state === olTileState.EMPTY) {
+          deferred.resolve(this.emptyCanvas_);
+          unlistenByKey(unlisten);
+        } else if (state === olTileState.LOADED) {
+          deferred.resolve(tile.getImage());
+          unlistenByKey(unlisten);
+        } else if (state === olTileState.ERROR) {
+          deferred.resolve(this.emptyCanvas_);
+          unlistenByKey(unlisten);
+        }
+      });
+    }
+
+    return deferred.promise;
   }
 }
 
@@ -204,7 +222,7 @@ Object.defineProperties(OLImageryProvider.prototype, {
           // properly set). Cesium assumes the minimumLevel to contain only
           // a few tiles and tries to load them all at once -- this can
           // freeze and/or crash the browser !
-          return 0;
+          return 1;
           //var tg = this.source_.getTileGrid();
           //return tg ? tg.getMinZoom() : 0;
         }
